@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>icons/84-842915_delete-icon-png-red.png</file>
+        <file>icons/i.png</file>
+        <file>icons/iconApp.ico</file>
+        <file>icons/plus.ico</file>
+        <file>icons/images.png</file>
+    </qresource>
+    <qresource prefix="/sounds">
+        <file>sounds/logoff-meloboom.wav</file>
+        <file>sounds/miui6-notification-meloboom.wav</file>
+    </qresource>
+</RCC>
+
