@@ -23,10 +23,32 @@ void SocketClient::registerUser(const QString &email, const QString &password)
         obj["password"] = password;
         QJsonDocument doc(obj);
         QByteArray data = doc.toJson();
-        m_socket->write(data);
+        m_requestQueue.enqueue({
+            obj,
+            [this](const QJsonObject& response) {
+                m_token = response["session"].toString();
+                m_userId = response["user_id"].toString();
+                if(response["status"] == "ok") {
+                    mStatusAuthorization = true;
+                    m_keychain->writeUserId(m_userId);
+                    m_keychain->writeToken(m_token);
+                    emit registrationSuccessfully();
+                } else {
+                    m_token.clear();
+                    m_userId.clear();
+                    mStatusAuthorization = false;
+                    m_keychain->writeUserId(m_userId);
+                    m_keychain->writeToken(m_token);
+                    emit registrationError(response["message"].toString());
+                }
+            }
+        });
+
+        if(!m_isRequestPending) sendNextRequest();
         qDebug() << "Запрос регистрации отправлен:" << data;
     } else {
         qDebug() << "Нет соединения с сервером. Регистрация не может быть выполнена.";
+        emit registrationError("Ошибка подключения к серверу: \"Socket operation timed out\"");
     }
 }
 void SocketClient::authorizationUser(const QString &email, const QString &password)
@@ -39,7 +61,28 @@ void SocketClient::authorizationUser(const QString &email, const QString &passwo
         obj["password"] = password;
         QJsonDocument doc(obj);
         QByteArray data = doc.toJson();
-        m_socket->write(data);
+        m_requestQueue.enqueue({
+            obj,
+            [this](const QJsonObject& response) {
+                m_token = response["session"].toString();
+                m_userId = response["user_id"].toString();
+                if(response["status"] == "ok") {
+                    mStatusAuthorization = true;
+                    m_keychain->writeUserId(m_userId);
+                    m_keychain->writeToken(m_token);
+                    emit authorizationSuccessfully();
+                } else {
+                    m_token.clear();
+                    m_userId.clear();
+                    mStatusAuthorization = false;
+                    m_keychain->writeUserId(m_userId);
+                    m_keychain->writeToken(m_token);
+                    emit authorizationError(response["message"].toString());
+                }
+            }
+        });
+
+        if(!m_isRequestPending) sendNextRequest();
         qDebug() << "Запрос регистрации отправлен:" << data;
     } else {
         qDebug() << "Нет соединения с сервером. Регистрация не может быть выполнена.";
@@ -56,22 +99,53 @@ void SocketClient::changePasswordUser(const QString &oldPassword, const QString 
         obj["new_password"] = newPassword;
         QJsonDocument doc(obj);
         QByteArray data = doc.toJson();
-        m_socket->write(data);
+        m_requestQueue.enqueue({
+            obj,
+            [this](const QJsonObject& response) {
+                m_token = response["session"].toString();
+                m_userId = response["user_id"].toString();
+                if(response["status"] == "ok") {
+                    emit changePasswordSuccessfully();
+            } else {
+                    qDebug() << "Не удалось изменить пароль";
+                    emit changePasswordError(response["message"].toString());
+            }
+            }
+        });
+
+        if(!m_isRequestPending) sendNextRequest();
         qDebug() << "Запрос удаления сессии отправлен:" << data;
     } else {
         qDebug() << "Нет соединения с сервером. Регистрация не может быть выполнена.";
+        emit changePasswordError("Ошибка подключения к серверу: \"Socket operation timed out\"");
     }
 }
 void SocketClient::exitUser()
 {
     if (m_socket->state() == QAbstractSocket::ConnectedState) {
-        // Формируем JSON-запрос
         QJsonObject obj;
         obj["type"] = "delete_session";
         obj["session"] = m_token;
         QJsonDocument doc(obj);
         QByteArray data = doc.toJson();
-        m_socket->write(data);
+        m_requestQueue.enqueue({
+            obj,
+            [this](const QJsonObject& response) {
+                if(response["status"] == "ok") {
+                    m_token.clear();
+                    m_userId.clear();
+                    m_keychain->writeUserId(m_userId);
+                    m_keychain->writeToken(m_token);
+                    mStatusAuthorization = false;
+                    emit exitSuccessfully();
+                } else {
+                    qDebug() << "Не удалось удалить сессию";
+                    emit exitError(response["message"].toString());
+                }
+            }
+        });
+
+        if(!m_isRequestPending) sendNextRequest();
         qDebug() << "Запрос удаления сессии отправлен:" << data;
     } else {
         qDebug() << "Нет соединения с сервером. Регистрация не может быть выполнена.";
@@ -80,27 +154,55 @@ void SocketClient::exitUser()
 
 void SocketClient::checkConnection()
 {
-    // Если сокет не в состоянии "Connected", пробуем переподключиться
     if (m_socket->state() != QAbstractSocket::ConnectedState) {
         qDebug() << "Соединение потеряно. Пытаемся переподключиться...";
         reconnect();
     } else {
-        // При необходимости можно отправлять heartbeat-сообщения
         if(mStatusAuthorization && !m_token.isEmpty())
         {
             QJsonObject request;
             request["type"] = "check_session";
             qDebug() << m_token;
-            request["session"] = m_token; // Передаём сохранённый токен
+            request["session"] = m_token;
 
             QJsonDocument doc(request);
             QByteArray data = doc.toJson();
 
-            // Отправляем запрос на сервер
-            m_socket->write(data);
+            m_requestQueue.enqueue({
+                request,
+                [this](const QJsonObject& response) {
+                    m_token = response["session"].toString();
+                    m_userId = response["user_id"].toString();
+                    if(response["status"] == "ok") {
+                        qDebug() << "mUserId: " << m_userId;
+                        mStatusAuthorization = true;
+                        m_keychain->writeToken(m_token);
+                        emit validSession();
+                    } else {
+                        m_token.clear();
+                        m_userId.clear();
+                        m_keychain->writeUserId(m_userId);
+                        m_keychain->writeToken(m_token);
+                        mStatusAuthorization = false;
+                        emit invalidSession();
+                    }
+                }
+            });
+
+            if(!m_isRequestPending) sendNextRequest();
         }
         qDebug() << "Соединение активно.";
     }
+}
+void SocketClient::sendNextRequest() {
+    if(m_requestQueue.isEmpty() || m_isRequestPending) return;
+
+    m_isRequestPending = true;
+    Request& request = m_requestQueue.head();
+
+    QJsonDocument doc(request.data);
+    m_socket->write(doc.toJson());
+    qDebug() << "Запрос отправлен:" << doc.toJson();
 }
 void SocketClient::onConnected()
 {
@@ -110,26 +212,44 @@ void SocketClient::onConnected()
         QJsonObject request;
         request["type"] = "check_session";
         qDebug() << m_token;
-        const QString token = m_token;
-        request["session"] = token; // Передаём сохранённый токен
+        request["session"] = m_token;
 
         QJsonDocument doc(request);
         QByteArray data = doc.toJson();
 
-        // Отправляем запрос на сервер
-        m_socket->write(data);
+        m_requestQueue.enqueue({
+            request,
+            [this](const QJsonObject& response) {
+                qDebug() << "i'm here";
+                m_token = response["session"].toString();
+                m_userId = response["user_id"].toString();
+                if(response["status"] == "ok") {
+                    qDebug() << "mUserId: " << m_userId;
+                    mStatusAuthorization = true;
+                    m_keychain->writeToken(m_token);
+                    emit validSession();
+                } else {
+                    m_token.clear();
+                    m_userId.clear();
+                    m_keychain->writeUserId(m_userId);
+                    m_keychain->writeToken(m_token);
+                    mStatusAuthorization = false;
+                    emit invalidSession();
+                }
+            }
+        });
+
+        if(!m_isRequestPending) sendNextRequest();
     }
     emit connected();
 }
 
-// Слот, вызываемый при разрыве соединения
 void SocketClient::onDisconnected()
 {
     qDebug() << "Соединение с сервером разорвано.";
     emit disconnected();
 }
 
-// Слот для обработки ошибок
 void SocketClient::onError(QAbstractSocket::SocketError socketError)
 {
     Q_UNUSED(socketError)
@@ -137,88 +257,43 @@ void SocketClient::onError(QAbstractSocket::SocketError socketError)
 }
 void SocketClient::onReadyRead()
 {
-    QByteArray data = m_socket->readAll();
-    QJsonDocument doc = QJsonDocument::fromJson(data);
-    if (doc.isObject()) {
-        QJsonObject obj = doc.object();
-        QString type = obj["type"].toString();
-        QString status = obj["status"].toString();
-        m_token = obj["session"].toString();
-        m_userId = obj["user_id"].toString();
-        QString message = obj["message"].toString();
-        qDebug() << "Ответ сервера:" << status << "-" << message;
-        qDebug() << "Ответ сервера:" << status << "-" << message << "-" << type << "-" << m_token << "-" << m_userId;
-        if (type == "change_password_reply") {
-            if(status == "ok") {
-                emit changePasswordSuccessfully();
-            } else {
-                qDebug() << "Не удалось изменить пароль";
-                emit changePasswordError(message);
+    QDataStream in(m_socket);
+    in.setVersion(QDataStream::Qt_5_15);
+
+    while (true) {
+        if (m_expectedSize == 0) {
+            if (m_socket->bytesAvailable() < sizeof(quint32)) break;
+            in >> m_expectedSize;
+        }
+
+        if (m_socket->bytesAvailable() < m_expectedSize) break;
+
+        QByteArray data = m_socket->read(m_expectedSize);
+        m_expectedSize = 0;
+
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(data, &error);
+        if(doc.isObject())
+        {
+            if (error.error != QJsonParseError::NoError) {
+                qDebug() << "JSON error:" << error.errorString();
+                continue;
+            }
+
+            m_isRequestPending = false;
+            qDebug() << "doc " << doc.object();
+
+            if(!m_requestQueue.isEmpty()) {
+                auto nextRequest = m_requestQueue.dequeue();
+                if(nextRequest.handler) nextRequest.handler(doc.object());
+                else qDebug() << "not handler";
+                sendNextRequest();
+            }
+            else
+            {
+                qDebug() << "очередь реквеста пустая";
             }
         }
-        if (type == "delete_session_reply") {
-            if(status == "ok") {
-                m_token.clear();
-                m_userId.clear();
-                m_keychain->writeUserId(m_userId);
-                m_keychain->writeToken(m_token);
-                mStatusAuthorization = false;
-                emit exitSuccessfully();
-            } else {
-                qDebug() << "Не удалось удалить сессию";
-                emit exitError();
-            }
-        }
-        if (type == "check_session_reply") {
-            if(status == "ok") {
-                qDebug() << "mUserId: " << m_userId;
-                mStatusAuthorization = true;
-                m_keychain->writeToken(m_token);
-                emit validSession();
-            } else {
-                // Сессия не валидна, например, необходимо перелогиниться
-                m_token.clear();
-                m_userId.clear();
-                m_keychain->writeUserId(m_userId);
-                m_keychain->writeToken(m_token);
-                mStatusAuthorization = false;
-                emit invalidSession();
-            }
-        }
-        if (type == "authorization_reply") {
-            if(status == "ok") {
-                mStatusAuthorization = true;
-                m_keychain->writeUserId(m_userId);
-                m_keychain->writeToken(m_token);
-                emit authorizationSuccessfully();
-            } else {
-                m_token.clear();
-                m_userId.clear();
-                mStatusAuthorization = false;
-                m_keychain->writeUserId(m_userId);
-                m_keychain->writeToken(m_token);
-                emit authorizationError(message);
-            }
-        }
-        if (type == "registration_reply") {
-            if(status == "ok") {
-                mStatusAuthorization = true;
-                m_keychain->writeUserId(m_userId);
-                m_keychain->writeToken(m_token);
-                emit registrationSuccessfully();
-            } else {
-                // Сессия не валидна, например, необходимо перелогиниться
-                m_token.clear();  // сброс токена
-                m_userId.clear();
-                mStatusAuthorization = false;
-                m_keychain->writeUserId(m_userId);
-                m_keychain->writeToken(m_token);
-                emit registrationError(message);
-            }
-        }
-    } else {
-        qDebug() << "Получен некорректный ответ:" << data;
-        mStatusAuthorization = false;
     }
 }
 bool SocketClient::getStatusAuthorization()
@@ -233,8 +308,6 @@ void SocketClient::reconnect()
 {
     if (m_socket->state() == QAbstractSocket::ConnectingState)
         return;
-
-    // Закрываем предыдущее соединение (если было)
     m_socket->abort();
     m_socket->connectToHost(m_host, m_port);
 }

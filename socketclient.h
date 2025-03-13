@@ -5,6 +5,8 @@
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QList>
+#include <QQueue>
 #include "keychainclass.h"
 
 class SocketClient : public QObject
@@ -36,7 +38,7 @@ signals:
     void authorizationSuccessfully();
     void authorizationError(const QString& error);
     void exitSuccessfully();
-    void exitError();
+    void exitError(const QString& error);
     void changePasswordSuccessfully();
     void changePasswordError(const QString& error);
 private:
@@ -48,6 +50,18 @@ private:
     QString m_userId;
     KeyChainClass* m_keychain;
     bool mStatusAuthorization = false;
+private:
+    struct Request {
+        QJsonObject data;
+        std::function<void(const QJsonObject&)> handler;
+    };
+
+    QQueue<Request> m_requestQueue;
+    bool m_isRequestPending = false;
+    QByteArray m_buffer;
+    quint32 m_expectedSize = 0;
+
+    void sendNextRequest();
 private:
     void reconnect();
 };

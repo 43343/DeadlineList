@@ -6,19 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>422</width>
+    <width>420</width>
     <height>300</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>422</width>
+    <width>420</width>
     <height>300</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>422</width>
+    <width>420</width>
     <height>300</height>
    </size>
   </property>
@@ -175,31 +175,30 @@
   <widget class="QPushButton" name="saveButton">
    <property name="geometry">
     <rect>
-     <x>230</x>
+     <x>255</x>
      <y>260</y>
      <width>81</width>
      <height>24</height>
     </rect>
    </property>
    <property name="text">
-    <string>СОХРАНИТЬ</string>
+    <string>Сохранить</string>
    </property>
   </widget>
   <widget class="QPushButton" name="cancelButton">
    <property name="geometry">
     <rect>
-     <x>330</x>
+     <x>340</x>
      <y>260</y>
      <width>75</width>
      <height>24</height>
     </rect>
    </property>
    <property name="text">
-    <string>ОТМЕНА</string>
+    <string>Отмена</string>
    </property>
   </widget>
  </widget>
  <resources/>
  <connections/>
 </ui>
-

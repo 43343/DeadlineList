@@ -8,7 +8,6 @@ ChangePasswordForm::ChangePasswordForm(SocketClient* socket, QWidget *parent)
     , mSocket(socket)
 {
     ui->setupUi(this);
-    ui->labelWidget->hide();
     ui->oldPasswordEdit->setEchoMode(QLineEdit::Password);
     ui->newPasswordEdit->setEchoMode(QLineEdit::Password);
     ui->confirmPasswordEdit->setEchoMode(QLineEdit::Password);
@@ -85,12 +84,12 @@ void ChangePasswordForm::changePasswordButtonClick()
 
     ui->errorOldPassword->hide();
     ui->errorPassword->hide();
-    ui->oldPasswordEdit->setStyleSheet("QLineEdit { font: 10pt \"Sitka\";}");
-    ui->confirmPasswordEdit->setStyleSheet("QLineEdit { font: 10pt \"Sitka\";}");
+    ui->oldPasswordEdit->setStyleSheet("QLineEdit { }");
+    ui->confirmPasswordEdit->setStyleSheet("QLineEdit { }");
     const bool isValidConfirmPassword = ui->newPasswordEdit->text() == ui->confirmPasswordEdit->text();
     if(!isValidConfirmPassword)
     {
-        ui->confirmPasswordEdit->setStyleSheet("QLineEdit { font: 10pt \"Sitka\";  border: 1px solid red;}");
+        ui->confirmPasswordEdit->setStyleSheet("QLineEdit { border: 1px solid red; }");
         ui->errorPassword->show();
         return;
     }
@@ -110,28 +109,34 @@ void ChangePasswordForm::successfullyChangePassword()
     ui->changePasswordButton->setEnabled(true);
     ui->changePasswordButton->setText("Сменить пароль");
     ui->changePasswordButton->stopSpinner();
-    ui->changePasswordWidget->hide();
     ui->closeButtonLabelWidget->show();
     ui->cancelButtonLabelWidget->hide();
     ui->backButtonLabelWidget->hide();
-    ui->labelWidget->show();
     ui->labelWidgetText->setText("Пароль изменен успешно.");
+    ui->stackedWidget->setCurrentIndex(1);
+    setMinimumSize(480,130);
+    setMaximumSize(480,130);
+    ui->changePasswordLabel->setMinimumWidth(480);
+    ui->changePasswordLabel->setMaximumWidth(480);
 }
 void ChangePasswordForm::errorChangePassword(const QString& error)
 {
     if(error == "The old password was entered incorrectly.")
     {
-        ui->oldPasswordEdit->setStyleSheet("QLineEdit { font: 10pt \"Sitka\"; border: 1px solid red;}");
+        ui->oldPasswordEdit->setStyleSheet("QLineEdit { border: 1px solid red; }");
         ui->errorOldPassword->show();
     }
     else
     {
-        ui->changePasswordWidget->show();
         ui->closeButtonLabelWidget->hide();
         ui->cancelButtonLabelWidget->show();
         ui->backButtonLabelWidget->show();
-        ui->labelWidget->show();
         ui->labelWidgetText->setText(error);
+        ui->stackedWidget->setCurrentIndex(1);
+        setMinimumSize(480,130);
+        setMaximumSize(480,130);
+        ui->changePasswordLabel->setMinimumWidth(480);
+        ui->changePasswordLabel->setMaximumWidth(480);
     }
     ui->oldPasswordEdit->setEnabled(true);
     ui->newPasswordEdit->setEnabled(true);
@@ -143,8 +148,11 @@ void ChangePasswordForm::errorChangePassword(const QString& error)
 }
 void ChangePasswordForm::back()
 {
-    ui->labelWidget->hide();
-    ui->changePasswordWidget->show();
+    ui->stackedWidget->setCurrentIndex(0);
+    setMinimumSize(600,380);
+    setMaximumSize(600,380);
+    ui->changePasswordLabel->setMinimumWidth(600);
+    ui->changePasswordLabel->setMaximumWidth(600);
 }
 
 ChangePasswordForm::~ChangePasswordForm()

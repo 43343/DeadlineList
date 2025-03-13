@@ -8,7 +8,6 @@ RegistrationForm::RegistrationForm(SocketClient* socket, QWidget *parent)
     , mSocket(socket)
 {
     ui->setupUi(this);
-    ui->labelWidget->hide();
     ui->passwordEdit->setEchoMode(QLineEdit::Password);
     ui->confirmPasswordEdit->setEchoMode(QLineEdit::Password);
     ui->errorEmail->hide();
@@ -92,7 +91,7 @@ void RegistrationForm::registrationButtonClick()
     ui->errorEmail->hide();
     ui->errorPassword->hide();
     ui->emailEdit->setStyleSheet("QLineEdit { font: 10pt \"Sitka\";}");
-    ui->confirmPasswordEdit->setStyleSheet("QLineEdit { font: 10pt \"Sitka\";}");
+    ui->confirmPasswordEdit->setStyleSheet("QLineEdit { }");
     const bool isValidEmail = validEmail(ui->emailEdit->text());
     const bool isValidConfirmPassword = ui->passwordEdit->text() == ui->confirmPasswordEdit->text();
     if(!isValidEmail)
@@ -103,7 +102,7 @@ void RegistrationForm::registrationButtonClick()
     }
     if(!isValidConfirmPassword)
     {
-        ui->confirmPasswordEdit->setStyleSheet("QLineEdit { font: 10pt \"Sitka\";  border: 1px solid red;}");
+        ui->confirmPasswordEdit->setStyleSheet("QLineEdit { border: 1px solid red;}");
         ui->errorPassword->show();
     }
     if(!isValidEmail || !isValidConfirmPassword)
@@ -124,12 +123,15 @@ void RegistrationForm::successfullyRegistration()
     ui->registerButton->setEnabled(true);
     ui->registerButton->setText("Зарегистрироваться");
     ui->registerButton->stopSpinner();
-    ui->registrationWidget->hide();
     ui->closeButtonLabelWidget->show();
     ui->cancelButtonLabelWidget->hide();
     ui->backButtonLabelWidget->hide();
-    ui->labelWidget->show();
+    ui->stackedWidget->setCurrentIndex(1);
     ui->labelWidgetText->setText("Регистрация прошла успешно.");
+    setMinimumSize(480,130);
+    setMaximumSize(480,130);
+    ui->registrationLabel->setMinimumWidth(480);
+    ui->registrationLabel->setMaximumWidth(480);
 }
 void RegistrationForm::errorRegistration(const QString& error)
 {
@@ -141,12 +143,15 @@ void RegistrationForm::errorRegistration(const QString& error)
     }
     else
     {
-        ui->registrationWidget->hide();
         ui->closeButtonLabelWidget->hide();
         ui->cancelButtonLabelWidget->show();
         ui->backButtonLabelWidget->show();
-        ui->labelWidget->show();
+        ui->stackedWidget->setCurrentIndex(1);
         ui->labelWidgetText->setText(error);
+        setMinimumSize(480,130);
+        setMaximumSize(480,130);
+        ui->registrationLabel->setMinimumWidth(480);
+        ui->registrationLabel->setMaximumWidth(480);
     }
     ui->emailEdit->setEnabled(true);
     ui->passwordEdit->setEnabled(true);
@@ -158,8 +163,11 @@ void RegistrationForm::errorRegistration(const QString& error)
 }
 void RegistrationForm::back()
 {
-    ui->labelWidget->hide();
-    ui->registrationWidget->show();
+    ui->stackedWidget->setCurrentIndex(0);
+    setMinimumSize(600,380);
+    setMaximumSize(600,380);
+    ui->registrationLabel->setMinimumWidth(600);
+    ui->registrationLabel->setMaximumWidth(600);
 }
 
 RegistrationForm::~RegistrationForm()

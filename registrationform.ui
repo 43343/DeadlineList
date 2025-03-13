@@ -7,309 +7,30 @@
     <x>0</x>
     <y>0</y>
     <width>600</width>
-    <height>480</height>
+    <height>380</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>600</width>
-    <height>480</height>
+    <height>380</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>600</width>
-    <height>480</height>
+    <height>380</height>
    </size>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Registration</string>
   </property>
-  <widget class="QWidget" name="registrationWidget" native="true">
+  <widget class="QLabel" name="registrationLabel">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>10</y>
-     <width>601</width>
-     <height>471</height>
-    </rect>
-   </property>
-   <widget class="QWidget" name="verticalLayoutWidget_3">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>60</y>
-      <width>571</width>
-      <height>128</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout_5">
-     <item>
-      <widget class="QLabel" name="minimumLength">
-       <property name="styleSheet">
-        <string notr="true"/>
-       </property>
-       <property name="text">
-        <string>* Минимальная длина — 8 символов</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="containCapitalLetter">
-       <property name="styleSheet">
-        <string notr="true"/>
-       </property>
-       <property name="text">
-        <string>* Должен содержать хотя бы одну заглавную букву (A-Z)</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="containLowercaseLetter">
-       <property name="styleSheet">
-        <string notr="true"/>
-       </property>
-       <property name="text">
-        <string>* Должен содержать хотя бы одну строчную букву (a-z)</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="containDigit">
-       <property name="styleSheet">
-        <string notr="true"/>
-       </property>
-       <property name="text">
-        <string>* Должен содержать хотя бы одну цифру (0-9)</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="containSpecialCharacter">
-       <property name="styleSheet">
-        <string notr="true"/>
-       </property>
-       <property name="text">
-        <string>* Должен содержать хотя бы один специальный символ (например, !@#$%^*)</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="noSpacesAndCyrillic">
-       <property name="styleSheet">
-        <string notr="true"/>
-       </property>
-       <property name="text">
-        <string>* Не должен содержать пробелы или кириллицу</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QLabel" name="label_7">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>40</y>
-      <width>171</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QLabel {
-	font: 700 10pt &quot;Sitka&quot;;
-}</string>
-    </property>
-    <property name="text">
-     <string>Требования к паролю:</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="cancelButton">
-    <property name="geometry">
-     <rect>
-      <x>420</x>
-      <y>370</y>
-      <width>75</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Отмена</string>
-    </property>
-   </widget>
-   <widget class="SpinnerButton" name="registerButton">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>370</y>
-      <width>131</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Зарегистрироваться</string>
-    </property>
-   </widget>
-   <widget class="QWidget" name="verticalLayoutWidget_4">
-    <property name="geometry">
-     <rect>
-      <x>70</x>
-      <y>220</y>
-      <width>421</width>
-      <height>131</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout_6">
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
-       <property name="spacing">
-        <number>41</number>
-       </property>
-       <item>
-        <widget class="QLabel" name="label_8">
-         <property name="styleSheet">
-          <string notr="true">QLabel {
-	font: 10pt &quot;Sitka&quot;;
-}</string>
-         </property>
-         <property name="text">
-          <string>ПОЧТА/EMAIL</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_7">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLineEdit" name="emailEdit">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="errorEmail">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>2</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>10</height>
-            </size>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">QLabel 
-{
-	font: 350 7pt &quot;Segoe UI&quot;;
-    color: red;
-}</string>
-           </property>
-           <property name="text">
-            <string>                                                                            *Почта введена некорректно</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_5">
-       <property name="spacing">
-        <number>82</number>
-       </property>
-       <item>
-        <widget class="QLabel" name="label_9">
-         <property name="styleSheet">
-          <string notr="true">QLabel {
-	font: 10pt &quot;Sitka&quot;;
-}</string>
-         </property>
-         <property name="text">
-          <string>ПАРОЛЬ</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="passwordEdit">
-         <property name="styleSheet">
-          <string notr="true"/>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_6">
-       <item>
-        <widget class="QLabel" name="label_10">
-         <property name="text">
-          <string>ПОДТВЕРДИТЕ ПАРОЛЬ</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_8">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLineEdit" name="confirmPasswordEdit"/>
-         </item>
-         <item>
-          <widget class="QLabel" name="errorPassword">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>2</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>10</height>
-            </size>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">QLabel 
-{
-	font: 350 7pt &quot;Segoe UI&quot;;
-    color: red;
-}</string>
-           </property>
-           <property name="text">
-            <string>                                                                                         *Пароли не совпадают</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QLabel" name="label_11">
-   <property name="geometry">
-    <rect>
-     <x>230</x>
-     <y>10</y>
-     <width>171</width>
+     <width>600</width>
      <height>16</height>
     </rect>
    </property>
@@ -321,79 +42,381 @@
    <property name="text">
     <string>РЕГИСТРАЦИЯ</string>
    </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignCenter</set>
+   </property>
   </widget>
-  <widget class="QWidget" name="labelWidget" native="true">
+  <widget class="QStackedWidget" name="stackedWidget">
    <property name="geometry">
     <rect>
-     <x>90</x>
+     <x>0</x>
      <y>30</y>
-     <width>441</width>
-     <height>111</height>
+     <width>600</width>
+     <height>411</height>
     </rect>
    </property>
-   <widget class="QLabel" name="labelWidgetText">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>10</y>
-      <width>441</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QLabel {
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <widget class="QWidget" name="page">
+    <widget class="QWidget" name="registrationWidget" native="true">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>-20</y>
+       <width>601</width>
+       <height>471</height>
+      </rect>
+     </property>
+     <widget class="QWidget" name="verticalLayoutWidget_3">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>60</y>
+        <width>571</width>
+        <height>128</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="QLabel" name="minimumLength">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>* Минимальная длина — 8 символов</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="containCapitalLetter">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>* Должен содержать хотя бы одну заглавную букву (A-Z)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="containLowercaseLetter">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>* Должен содержать хотя бы одну строчную букву (a-z)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="containDigit">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>* Должен содержать хотя бы одну цифру (0-9)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="containSpecialCharacter">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>* Должен содержать хотя бы один специальный символ (например, !@#$%^*)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="noSpacesAndCyrillic">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>* Не должен содержать пробелы или кириллицу</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QLabel" name="label_7">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>40</y>
+        <width>171</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLabel {
+	font: 700 10pt &quot;Sitka&quot;;
+}</string>
+      </property>
+      <property name="text">
+       <string>Требования к паролю:</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="cancelButton">
+      <property name="geometry">
+       <rect>
+        <x>510</x>
+        <y>340</y>
+        <width>75</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Отмена</string>
+      </property>
+     </widget>
+     <widget class="SpinnerButton" name="registerButton">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>373</x>
+        <y>340</y>
+        <width>131</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Зарегистрироваться</string>
+      </property>
+     </widget>
+     <widget class="QWidget" name="verticalLayoutWidget_4">
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>200</y>
+        <width>421</width>
+        <height>131</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <property name="spacing">
+          <number>41</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_8">
+           <property name="styleSheet">
+            <string notr="true">QLabel {
+	font: 10pt &quot;Sitka&quot;;
+}</string>
+           </property>
+           <property name="text">
+            <string>ПОЧТА/EMAIL</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_7">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QLineEdit" name="emailEdit">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="errorEmail">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>2</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>10</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QLabel 
+{
+	font: 350 7pt &quot;Segoe UI&quot;;
+    color: red;
+}</string>
+             </property>
+             <property name="text">
+              <string>                                                                            *Почта введена некорректно</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <property name="spacing">
+          <number>82</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_9">
+           <property name="styleSheet">
+            <string notr="true">QLabel {
+	font: 10pt &quot;Sitka&quot;;
+}</string>
+           </property>
+           <property name="text">
+            <string>ПАРОЛЬ</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="passwordEdit">
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <item>
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>ПОДТВЕРДИТЕ ПАРОЛЬ</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_8">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QLineEdit" name="confirmPasswordEdit"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="errorPassword">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>2</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>10</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QLabel 
+{
+	font: 350 7pt &quot;Segoe UI&quot;;
+    color: red;
+}</string>
+             </property>
+             <property name="text">
+              <string>                                                                                         *Пароли не совпадают</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="page_2">
+    <widget class="QWidget" name="labelWidget" native="true">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>480</width>
+       <height>111</height>
+      </rect>
+     </property>
+     <widget class="QLabel" name="labelWidgetText">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>10</y>
+        <width>480</width>
+        <height>61</height>
+       </rect>
+      </property>
+      <property name="layoutDirection">
+       <enum>Qt::LayoutDirection::LeftToRight</enum>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLabel {
 	
 	font: 700 14pt &quot;Sitka&quot;;
 }</string>
-    </property>
-    <property name="text">
-     <string>Ошибка подключения к серверу: &quot;Socket operation timed out&quot;</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignmentFlag::AlignCenter</set>
-    </property>
-    <property name="wordWrap">
-     <bool>true</bool>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="backButtonLabelWidget">
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>70</y>
-      <width>75</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Назад</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="cancelButtonLabelWidget">
-    <property name="geometry">
-     <rect>
-      <x>360</x>
-      <y>70</y>
-      <width>75</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Отмена</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="closeButtonLabelWidget">
-    <property name="geometry">
-     <rect>
-      <x>360</x>
-      <y>70</y>
-      <width>75</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Закрыть</string>
-    </property>
+      </property>
+      <property name="text">
+       <string>Ошибка подключения к серверу: &quot;Socket operation timed out&quot;</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="backButtonLabelWidget">
+      <property name="geometry">
+       <rect>
+        <x>320</x>
+        <y>70</y>
+        <width>75</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Назад</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="cancelButtonLabelWidget">
+      <property name="geometry">
+       <rect>
+        <x>400</x>
+        <y>70</y>
+        <width>75</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Отмена</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="closeButtonLabelWidget">
+      <property name="geometry">
+       <rect>
+        <x>400</x>
+        <y>70</y>
+        <width>75</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Закрыть</string>
+      </property>
+     </widget>
+    </widget>
    </widget>
   </widget>
  </widget>

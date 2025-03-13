@@ -179,7 +179,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>ИЗМЕНИТЬ</string>
+    <string>Изменить</string>
    </property>
   </widget>
   <widget class="QPushButton" name="cancelButton">
@@ -192,7 +192,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>ОТМЕНА</string>
+    <string>Отмена</string>
    </property>
   </widget>
  </widget>

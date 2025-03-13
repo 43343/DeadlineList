@@ -107,7 +107,7 @@ MainWindow::MainWindow(QWidget *parent)
     trayIcon->show();
 
     KeyChainClass* keychain;
-    mSocket = new SocketClient("127.0.0.1", 1234, keychain, this);
+    mSocket = new SocketClient("192.168.0.217", 1234, keychain, this);
     connect(keychain, &KeyChainClass::tokenRestored, this, [&, this](const QString& m_token)
             {
                 mSocket->setToken(m_token);
@@ -218,7 +218,7 @@ void MainWindow::onAddButtonClicked()
 {
     EditTask addTask(this);
     addTask.setWindowTitle("Add task");
-    addTask.setButtonAcceptText("ДОБАВИТЬ");
+    addTask.setButtonAcceptText("Добавить");
     TaskForm *newTask = new TaskForm(ui->scrollAreaWidgetContents);
     QDateTime currentTime = QDateTime::currentDateTime();
     //QVBoxLayout *layout = qobject_cast<QVBoxLayout*>(ui->scrollAreaWidgetContents->layout());
