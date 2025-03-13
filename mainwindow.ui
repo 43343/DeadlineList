@@ -180,6 +180,53 @@
       <normaloff>:/icons/icons/images.png</normaloff>:/icons/icons/images.png</iconset>
     </property>
    </widget>
+   <widget class="ShadowButton" name="userButton">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>600</y>
+      <width>35</width>
+      <height>35</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    border: 2px solid black;
+    border-radius: 17px; 
+    background-color: #f0f0f0; 
+}</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="resource/resource.qrc">
+      <normaloff>:/icons/icons/icons8-пользователь-24.png</normaloff>:/icons/icons/icons8-пользователь-24.png</iconset>
+    </property>
+   </widget>
+   <widget class="ShadowButton" name="warningButton">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>600</y>
+      <width>35</width>
+      <height>35</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    border: 2px solid black;
+    border-radius: 17px; 
+    
+	
+	font: 16pt &quot;Stencil&quot;;
+	background-color: rgb(255, 135, 15);
+}</string>
+    </property>
+    <property name="text">
+     <string>!</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -192,6 +239,13 @@
    </property>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ShadowButton</class>
+   <extends>QPushButton</extends>
+   <header>shadowbutton.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="resource/resource.qrc"/>
  </resources>

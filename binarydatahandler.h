@@ -10,7 +10,6 @@ bool loadFromFile(const QString &fileName, Config* config);
 
 bool overwritingFile(const QString &fileName, const QList<TaskForm*>* taskList);
 bool loadFromFile(const QString &fileName, QList<TaskForm*>* taskList, QWidget *parent);
-
 QString fullFilePath(const QString &fileName);
 
 #endif // BINARYDATAHANDLER_H

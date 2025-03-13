@@ -4,6 +4,9 @@
 #include <QDataStream>
 #include <QDebug>
 #include <QStandardPaths>
+#include <QCryptographicHash>
+#include <QByteArray>
+#include <QDataStream>
 
 QString fullFilePath(const QString &fileName)
 {

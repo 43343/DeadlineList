@@ -8,14 +8,17 @@ set(CMAKE_AUTORCC ON)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(BUILD_WITH_QT6 ON)
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if(WIN32)
     set(APP_ICON_RESOURCE_WINDOWS "resource/app_icon.rc")
 endif()
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Widgets Multimedia)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets Multimedia)
+find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Gui Widgets Multimedia Network)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets Multimedia Network)
+add_subdirectory(qtkeychain/)
 
 qt_add_resources(QRCS resource/resource.qrc)
 
@@ -36,6 +39,24 @@ set(PROJECT_SOURCES
         config.h
         binarydatahandler.cpp
         binarydatahandler.h
+        shadowbutton.cpp
+        shadowbutton.h
+        authorizationform.cpp
+        authorizationform.h
+        authorizationform.ui
+        spinnerbutton.cpp
+        spinnerbutton.h
+        registrationform.cpp
+        registrationform.h
+        registrationform.ui
+        socketclient.cpp
+        socketclient.h
+        keychainclass.cpp
+        keychainclass.h
+        changepasswordform.h
+        changepasswordform.cpp
+        changepasswordform.ui
+
         ${QRCS}
 )
 
@@ -66,7 +87,12 @@ else()
     endif()
 endif()
 
-target_link_libraries(deadlinelist PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia)
+message(STATUS "QTKeychain include directories: ${QTKEYCHAIN_INCLUDE_DIRS}")
+message(STATUS "QTKeychain include libraries: " ${QTKEYCHAIN_LIBRARIES})
+
+
+target_link_libraries(deadlinelist PRIVATE qt6keychain Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia Qt${QT_VERSION_MAJOR}::Network)
+target_link_directories(deadlinelist PRIVATE ${QTKEYCHAIN_INCLUDE_DIRS})
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

@@ -9,19 +9,27 @@
 #include <QDateTime>
 #include <QUrl>
 #include <QFile>
+#include <QMessageBox>
 #include "edittask.h"
 #include "settings.h"
 #include "binarydatahandler.h"
+#include "keychainclass.h"
+#include "authorizationform.h"
+#include "registrationform.h"
+#include "changepasswordform.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , trayIcon(new QSystemTrayIcon(this))
     , trayMenu(new QMenu(this))
+    , userRegisterMenu(new QMenu(this))
+    , userMenu(new QMenu(this))
     , updateTimer(new QTimer(this))
     , soundEffect(new QSoundEffect(this))
     , taskList(new QList<TaskForm*>)
     , config(new Config())
+    , socketThread(new QThread(this))
 {
     ui->setupUi(this);
     loadFromFile("config", config);
@@ -64,6 +72,22 @@ MainWindow::MainWindow(QWidget *parent)
 
     trayIcon->setContextMenu(trayMenu);
 
+    QAction *loginUserMenu = new QAction("Войти", userRegisterMenu);
+    QAction *registrationUserMenu = new QAction("Зарегистрироваться", userRegisterMenu);
+    connect(loginUserMenu, &QAction::triggered, this, &MainWindow::onLogin);
+    connect(registrationUserMenu, &QAction::triggered, this, &MainWindow::onRegistration);
+    userRegisterMenu->addAction(loginUserMenu);
+    userRegisterMenu->addAction(registrationUserMenu);
+    connect(ui->userButton, &QPushButton::clicked, this, &MainWindow::showUserMenu);
+    connect(ui->warningButton, &QPushButton::clicked, this, &MainWindow::showWarning);
+
+    QAction *changePasswordUserMenu = new QAction("Сменить пароль", userRegisterMenu);
+    QAction *exitUserMenu = new QAction("Выйти", userRegisterMenu);
+    connect(changePasswordUserMenu, &QAction::triggered, this, &MainWindow::onChangePassword);
+    connect(exitUserMenu, &QAction::triggered, this, &MainWindow::onExit);
+    userMenu->addAction(changePasswordUserMenu);
+    userMenu->addAction(exitUserMenu);
+
     ui->allTasks->setStyleSheet("QPushButton { background-color: none; border: 3px solid rgb(133, 139, 225) ; font-size:40px; }");
     ui->completingTasks->setStyleSheet("QPushButton { background-color: none; border: none ; font-size:40px; } QPushButton:hover { border-bottom: 3px solid rgb(216, 236, 255) ;}");
     ui->deadlineEnded->setStyleSheet("QPushButton { background-color: none; border: none ; font-size:40px; } QPushButton:hover { border-bottom: 3px solid rgb(216, 236, 255) ;}");
@@ -81,6 +105,33 @@ MainWindow::MainWindow(QWidget *parent)
     updateTimer->start(2000);
 
     trayIcon->show();
+
+    KeyChainClass* keychain;
+    mSocket = new SocketClient("127.0.0.1", 1234, keychain, this);
+    connect(keychain, &KeyChainClass::tokenRestored, this, [&, this](const QString& m_token)
+            {
+                mSocket->setToken(m_token);
+                qDebug() << m_token << "mToken";
+            });
+    connect(keychain, &KeyChainClass::userIdRestored, this, [&, this](const QString& m_userId)
+            {
+                mSocket->setUserId(m_userId);
+                qDebug() << m_userId << "mUserId";
+            });
+    connect(keychain, &KeyChainClass::error, this, [&, this](const QString &errorText)
+            {
+        qDebug() << errorText;
+            });
+    keychain->readToken();
+    keychain->readUserId();
+
+    mSocket->moveToThread(socketThread);
+    socketThread->start();
+    connect(mSocket, &SocketClient::connected, this, &MainWindow::hideButtonWarning);
+    connect(mSocket, &SocketClient::disconnected, this, &MainWindow::showButtonWarning);
+    connect(mSocket, &SocketClient::validSession, this, &MainWindow::hideButtonWarning);
+    connect(mSocket, &SocketClient::invalidSession, this, &MainWindow::showButtonWarning);
+    connect(mSocket, &SocketClient::exitSuccessfully, this, &MainWindow::showButtonWarning);
 
     updateTaskVisibility();
 }
@@ -121,6 +172,47 @@ void MainWindow::showWindow() {
     animation->setEasingCurve(QEasingCurve::OutBounce);
 
     animation->start(QAbstractAnimation::DeleteWhenStopped);
+}
+void MainWindow::showUserMenu() {
+    if(mSocket->getConnected())
+    {
+        QPoint pos = ui->userButton->mapToGlobal(QPoint(0, ui->userButton->height()));
+        if(!mSocket->getStatusAuthorization())
+        {
+            userRegisterMenu->exec(pos);
+        }
+        else
+        {
+            userMenu->exec(pos);
+        }
+    }
+}
+void MainWindow::onLogin() {
+    AuthorizationForm autorizationForm(mSocket, this);
+    autorizationForm.exec();
+}
+void MainWindow::onRegistration()
+{
+    RegistrationForm registrationForm(mSocket, this);
+    registrationForm.exec();
+}
+void MainWindow::onExit()
+{
+    mSocket->exitUser();
+}
+void MainWindow::onChangePassword()
+{
+    ChangePasswordForm changePasswordForm(mSocket, this);
+    changePasswordForm.exec();
+}
+void MainWindow::showWarning()
+{
+    if(!mSocket->getConnected())
+        QMessageBox::warning(nullptr, "Хьюстен, у нас проблема",
+                         "Нет соединения с сервером.");
+    else if(!mSocket->getStatusAuthorization())
+        QMessageBox::warning(nullptr, "Хьюстен, у нас возможности",
+                             "Авторизуйся в аккаунте чтобы сохранять таски между устройствами.");
 }
 void MainWindow::onAddButtonClicked()
 {
@@ -306,7 +398,6 @@ void MainWindow::updateTaskVisibility()
                 }
             }
         }
-        qDebug() << currentTime << "currentTime" << deadline << "deadline";
         if(task->isDone())
         {
             task->setStyleSheetForWidget("QWidget { background-color: white; border: 2px solid gray; } QLabel { border: none; border-right: 2px solid gray; color: gray;} QCheckBox { border: none; border-right: 2px solid gray;} QPushButton { border: none;}");
@@ -330,6 +421,15 @@ void MainWindow::updateTaskVisibility()
     }
     ui->scrollAreaWidgetContents->setUpdatesEnabled(true);
 }
+void MainWindow::showButtonWarning()
+{
+    ui->warningButton->show();
+}
+void MainWindow::hideButtonWarning()
+{
+    if(mSocket->getStatusAuthorization())
+        ui->warningButton->hide();
+}
 
 void MainWindow::onSettingsButtonClicked()
 {
@@ -339,6 +439,10 @@ void MainWindow::onSettingsButtonClicked()
 }
 
 void MainWindow::quitApplication() {
+    if (socketThread->isRunning()) {
+        socketThread->quit();
+        socketThread->wait();
+    }
     trayIcon->hide();
     QApplication::quit();
 }

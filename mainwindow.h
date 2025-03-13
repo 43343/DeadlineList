@@ -8,8 +8,11 @@
 #include <QTimer>
 #include <QList>
 #include <QSoundEffect>
+#include <QThread>
+#include <QString>
 #include "taskform.h"
 #include "config.h"
+#include "socketclient.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -49,6 +52,16 @@ private slots:
 
     void changeDoneTask();
 
+    void showUserMenu();
+    void showWarning();
+    void onLogin();
+    void onRegistration();
+    void onChangePassword();
+    void onExit();
+
+    void showButtonWarning();
+    void hideButtonWarning();
+
 private:
     Ui::MainWindow *ui;
     QSystemTrayIcon *trayIcon;
@@ -61,6 +74,12 @@ private:
     QSet<TaskForm*> notifiedMissedDeadline;
 
     QSoundEffect* soundEffect;
+
+    QMenu *userRegisterMenu;
+    QMenu *userMenu;
+
+    QThread* socketThread;
+    SocketClient* mSocket;
 
 private:
     Config *config;

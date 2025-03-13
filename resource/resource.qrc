@@ -5,10 +5,10 @@
         <file>icons/iconApp.ico</file>
         <file>icons/plus.ico</file>
         <file>icons/images.png</file>
+        <file>icons/icons8-пользователь-24.png</file>
     </qresource>
     <qresource prefix="/sounds">
         <file>sounds/logoff-meloboom.wav</file>
         <file>sounds/miui6-notification-meloboom.wav</file>
     </qresource>
 </RCC>
-
