@@ -228,7 +228,7 @@
               </size>
              </property>
              <property name="styleSheet">
-              <string notr="true"/>
+              <string notr="true">QLineEdit { font: 10pt &quot;Sitka&quot;;}</string>
              </property>
             </widget>
            </item>

@@ -86,6 +86,7 @@ void SocketClient::authorizationUser(const QString &email, const QString &passwo
         qDebug() << "Запрос регистрации отправлен:" << data;
     } else {
         qDebug() << "Нет соединения с сервером. Регистрация не может быть выполнена.";
+        emit authorizationError("Ошибка подключения к серверу: \"Socket operation timed out\"");
     }
 }
 void SocketClient::changePasswordUser(const QString &oldPassword, const QString &newPassword)
@@ -220,7 +221,6 @@ void SocketClient::onConnected()
         m_requestQueue.enqueue({
             request,
             [this](const QJsonObject& response) {
-                qDebug() << "i'm here";
                 m_token = response["session"].toString();
                 m_userId = response["user_id"].toString();
                 if(response["status"] == "ok") {

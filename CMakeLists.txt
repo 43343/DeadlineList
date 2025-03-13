@@ -56,7 +56,6 @@ set(PROJECT_SOURCES
         changepasswordform.h
         changepasswordform.cpp
         changepasswordform.ui
-
         ${QRCS}
 )
 

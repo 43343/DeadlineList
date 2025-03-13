@@ -23,7 +23,7 @@ public slots:
     void errorAuthorization(const QString& error);
     void successfullyAuthorization();
     void back();
-
+    void forgetPassword();
 
 private:
     Ui::AuthorizationForm *ui;
