@@ -17,6 +17,8 @@ add_executable(deadlinelist_server
   main.cpp
   server.h server.cpp
   cryptdata.h cryptdata.cpp
+  smtpcredentials.h smtpcredentials.cpp
+  smtpclient.h smtpclient.cpp
 )
 target_link_libraries(deadlinelist_server Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Sql)
 

@@ -1,4 +1,7 @@
 #include "server.h"
+#include <QRandomGenerator>
+#include "smtpclient.h"
+#include "smtpcredentials.h"
 
 Server::Server()
 {
@@ -66,30 +69,82 @@ void Server::processRequest(QTcpSocket *socket)
 
     QJsonObject obj = doc.object();
     QString type = obj["type"].toString();
-    if(type == "reset_password")
+    if(type == "reset_password_send_code")
     {
         QString email = obj["email"].toString();
         QJsonObject response;
         QString userId;
         if(findUserByEmail(email, userId))
         {
-            response["type"] = "reset_password_reply";
+            QString resetCode = generateCode();
+            socket->setProperty("code", resetCode);
+            response["type"] = "reset_password_send_code_reply";
             response["status"] = "ok";
             response["user_id"] = userId;
             response["message"] = "The user was found by mail.";
+            QString smtpHost = "smtp.yandex.ru";
+            quint16 smtpPort = 465;
+            QString emailOwn;
+            QString password;
+            loadSmtpCredentials(emailOwn, password);
+            SMTPClient client(smtpHost, smtpPort, emailOwn, password);
+            client.sendMail(emailOwn, email, "Код для восстановления пароля.", resetCode);
         }
         else
         {
-            response["type"] = "reset_password_reply";
+            response["type"] = "reset_password_send_code_reply";
             response["status"] = "error";
             response["message"] = "The user was not found by mail.";
         }
+        QJsonDocument replyDoc(response);
+        sendResponse(socket, response);
+        qDebug() << replyDoc;
     }
-    if(type == "reset_password_apply")
+    if(type == "reset_password_check_code")
     {
         QString userId = obj["user_id"].toString();
-        QString code = obj["code"].toString();
+        QString providedCode = obj["code"].toString();
+
+        // Извлекаем ранее сохранённый код
+        QString storedCode = socket->property("code").toString();
+
         QJsonObject response;
+        if (!storedCode.isEmpty() && (providedCode == storedCode)) {
+            response["type"]    = "reset_password_check_code_reply";
+            response["status"]  = "ok";
+            response["message"] = "The reset code is correct.";
+        } else {
+            response["type"]    = "reset_password_check_code_reply";
+            response["status"]  = "error";
+            response["message"] = "Incorrect or expired reset code.";
+        }
+        QJsonDocument replyDoc(response);
+        sendResponse(socket, response);
+        qDebug() << replyDoc;
+        socket->flush();
+    }
+    if(type == "reset_password_new")
+    {
+        QString userId = obj["user_id"].toString();
+        QString newPassword = obj["new_password"].toString();
+
+        QJsonObject response;
+        if (resetPassword(userId, newPassword)) {
+            QString sessionToken = createSession(userId.toInt());
+            response["type"]    = "reset_password_new_reply";
+            response["session"] = cryptData.decryptQString(sessionToken);
+            response["user_id"] = userId;
+            response["status"]  = "ok";
+            response["message"] = "Password changed successfully.";
+        } else {
+            response["type"]    = "reset_password_new_reply";
+            response["status"]  = "error";
+            response["message"] = "Couldn't change password.";
+        }
+        QJsonDocument replyDoc(response);
+        sendResponse(socket, response);
+        qDebug() << replyDoc;
+        socket->flush();
     }
     if (type == "change_password")
     {
@@ -252,6 +307,17 @@ void Server::processRequest(QTcpSocket *socket)
         sendResponse(socket, response);
         qDebug() << replyDoc;
     }
+}
+QString Server::generateCode()
+{
+    const QString symbols = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const int codeLength = 6;
+    QString code;
+    for (int i = 0; i < codeLength; ++i) {
+        int index = QRandomGenerator::global()->bounded(symbols.length());
+        code.append(symbols.at(index));
+    }
+    return code;
 }
 bool Server::checkSessionInDatabase(const QString& token)
 {

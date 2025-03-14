@@ -25,6 +25,7 @@ private:
     bool registerNewUser(const QString &email, const QString &password, int &userId);
     bool authorizationUser(const QString &email, const QString &password, int &userId);
     bool changePassword(const QString &token, const QString &userId, const QString& oldPassword, const QString& newPassword);
+    QString generateCode();
 private:
     QString createSession(int userId);
     bool checkSessionInDatabase(const QString& token);
