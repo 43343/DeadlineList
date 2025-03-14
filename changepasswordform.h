@@ -5,12 +5,13 @@
 #include <QString>
 #include <QCloseEvent>
 #include "socketclient.h"
+#include "passwordvalidator.h"
 
 namespace Ui {
 class ChangePasswordForm;
 }
 
-class ChangePasswordForm : public QDialog
+class ChangePasswordForm : public QDialog, PasswordValidator
 {
     Q_OBJECT
 

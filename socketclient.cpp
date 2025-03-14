@@ -51,6 +51,98 @@ void SocketClient::registerUser(const QString &email, const QString &password)
         emit registrationError("Ошибка подключения к серверу: \"Socket operation timed out\"");
     }
 }
+void SocketClient::sendCodeEmailResetPassword(const QString &email)
+{
+    if (m_socket->state() == QAbstractSocket::ConnectedState) {
+        // Формируем JSON-запрос
+        QJsonObject obj;
+        obj["type"] = "reset_password_send_code";
+        obj["email"] = email;
+        QJsonDocument doc(obj);
+        QByteArray data = doc.toJson();
+        m_requestQueue.enqueue({
+            obj,
+            [this](const QJsonObject& response) {
+                m_userId = response["user_id"].toString();
+                if(response["status"] == "ok") {
+                    emit sendCodeEmailResetPasswordSuccessfully();
+                } else {
+                    emit sendCodeEmailResetPasswordError(response["message"].toString());
+                }
+            }
+        });
+
+        if(!m_isRequestPending) sendNextRequest();
+        qDebug() << "Запрос регистрации отправлен:" << data;
+    } else {
+        qDebug() << "Нет соединения с сервером. Код для сброса пароля не может быть отправлен.";
+        emit sendCodeEmailResetPasswordError("Ошибка подключения к серверу: \"Socket operation timed out\"");
+    }
+}
+void SocketClient::checkCodeEmailResetPassword(const QString &code)
+{
+    if (m_socket->state() == QAbstractSocket::ConnectedState) {
+        // Формируем JSON-запрос
+        QJsonObject obj;
+        obj["type"] = "reset_password_check_code";
+        obj["code"] = code;
+        QJsonDocument doc(obj);
+        QByteArray data = doc.toJson();
+        m_requestQueue.enqueue({
+            obj,
+            [this](const QJsonObject& response) {
+                if(response["status"] == "ok") {
+                    emit checkCodeEmailResetPasswordSuccessfully();
+                } else {
+                    emit checkCodeEmailResetPasswordError(response["message"].toString());
+                }
+            }
+        });
+
+        if(!m_isRequestPending) sendNextRequest();
+        qDebug() << "Запрос регистрации отправлен:" << data;
+    } else {
+        qDebug() << "Нет соединения с сервером. Код для сброса пароля не может быть отправлен.";
+        emit checkCodeEmailResetPasswordError("Ошибка подключения к серверу: \"Socket operation timed out\"");
+    }
+}
+void SocketClient::confirmResetNewPassword(const QString& password)
+{
+    if (m_socket->state() == QAbstractSocket::ConnectedState) {
+        // Формируем JSON-запрос
+        QJsonObject obj;
+        obj["type"] = "reset_password_new";
+        obj["new_password"] = password;
+        QJsonDocument doc(obj);
+        QByteArray data = doc.toJson();
+        m_requestQueue.enqueue({
+            obj,
+            [this](const QJsonObject& response) {
+                m_token = response["session"].toString();
+                m_userId = response["user_id"].toString();
+                if(response["status"] == "ok") {
+                    mStatusAuthorization = true;
+                    m_keychain->writeUserId(m_userId);
+                    m_keychain->writeToken(m_token);
+                    emit confirmResetNewPasswordSuccessfully();
+                } else {
+                    m_token.clear();
+                    m_userId.clear();
+                    mStatusAuthorization = false;
+                    m_keychain->writeUserId(m_userId);
+                    m_keychain->writeToken(m_token);
+                    emit confirmResetNewPasswordError(response["message"].toString());
+                }
+            }
+        });
+
+        if(!m_isRequestPending) sendNextRequest();
+        qDebug() << "Запрос регистрации отправлен:" << data;
+    } else {
+        qDebug() << "Нет соединения с сервером. Код для сброса пароля не может быть отправлен.";
+        emit confirmResetNewPasswordError("Ошибка подключения к серверу: \"Socket operation timed out\"");
+    }
+}
 void SocketClient::authorizationUser(const QString &email, const QString &password)
 {
     if (m_socket->state() == QAbstractSocket::ConnectedState) {

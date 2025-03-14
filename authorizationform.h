@@ -3,13 +3,15 @@
 
 #include <QWidget>
 #include <QDialog>
+#include <QEvent>
 #include "socketclient.h"
+#include "passwordvalidator.h"
 
 namespace Ui {
 class AuthorizationForm;
 }
 
-class AuthorizationForm : public QDialog
+class AuthorizationForm : public QDialog, PasswordValidator
 {
     Q_OBJECT
 
@@ -24,6 +26,16 @@ public slots:
     void successfullyAuthorization();
     void back();
     void forgetPassword();
+    void continueForgetPassword();
+    void successfullySendCodeEmail();
+    void errorSendCodeEmail(const QString& error);
+    void continueEnterCode();
+    void backEnterCode();
+    void successfullyContinueEnterCode();
+    void errorContinueEnterCode(const QString& error);
+    void confirmNewPassword();
+    void successfullyConfirmNewPassword();
+    void errorConfirmNewPassword(const QString& error);
 
 private:
     Ui::AuthorizationForm *ui;

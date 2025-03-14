@@ -17,6 +17,9 @@ public:
     void registerUser(const QString &email, const QString &password);
     void authorizationUser(const QString &email, const QString &password);
     void changePasswordUser(const QString &oldPassword, const QString &newPassword);
+    void sendCodeEmailResetPassword(const QString& email);
+    void checkCodeEmailResetPassword(const QString& code);
+    void confirmResetNewPassword(const QString& password);
     void exitUser();
     bool getStatusAuthorization();
     bool getConnected();
@@ -41,6 +44,12 @@ signals:
     void exitError(const QString& error);
     void changePasswordSuccessfully();
     void changePasswordError(const QString& error);
+    void sendCodeEmailResetPasswordSuccessfully();
+    void sendCodeEmailResetPasswordError(const QString& error);
+    void checkCodeEmailResetPasswordSuccessfully();
+    void checkCodeEmailResetPasswordError(const QString& error);
+    void confirmResetNewPasswordSuccessfully();
+    void confirmResetNewPasswordError(const QString& error);
 private:
     QTcpSocket *m_socket;
     QTimer *m_timer;

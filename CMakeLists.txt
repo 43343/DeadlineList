@@ -56,6 +56,10 @@ set(PROJECT_SOURCES
         changepasswordform.h
         changepasswordform.cpp
         changepasswordform.ui
+        otpinputwidget.h
+        otpinputwidget.cpp
+        passwordvalidator.h
+        passwordvalidator.cpp
         ${QRCS}
 )
 

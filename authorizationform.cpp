@@ -9,8 +9,11 @@ AuthorizationForm::AuthorizationForm(SocketClient* socket, QWidget *parent)
     ui->setupUi(this);
     ui->passwordEdit->setEchoMode(QLineEdit::Password);
     ui->forgetPasswordButton->setCursor(Qt::PointingHandCursor);
+    ui->resetNewPasswordEdit->setEchoMode(QLineEdit::Password);
+    ui->confirmResetNewPasswordEdit->setEchoMode(QLineEdit::Password);
     ui->errorEmailOrPassword->hide();
     ui->emailNotFound->hide();
+    ui->errorResetPasswordLabel->hide();
     connect(ui->loginButton, &QPushButton::clicked, this, &AuthorizationForm::loginButtonClick);
     connect(ui->cancelButton, &QPushButton::clicked, this, &QDialog::reject);
     connect(ui->cancelButtonLabelWidget, &QPushButton::clicked, this, &QDialog::reject);
@@ -18,8 +21,19 @@ AuthorizationForm::AuthorizationForm(SocketClient* socket, QWidget *parent)
     connect(ui->backButtonLabelWidget, &QPushButton::clicked, this, &AuthorizationForm::back);
     connect(ui->forgetPasswordButton, &QPushButton::clicked, this, &AuthorizationForm::forgetPassword);
     connect(ui->backForgetPasswordButton, &QPushButton::clicked, this, &AuthorizationForm::back);
+    connect(ui->continueForgetPasswordButton, &QPushButton::clicked, this, &AuthorizationForm::continueForgetPassword);
+    connect(ui->continueButtonEnterCode, &QPushButton::clicked, this, &AuthorizationForm::continueEnterCode);
+    connect(ui->backButtonEnterCode, &QPushButton::clicked, this, &AuthorizationForm::backEnterCode);
+    connect(ui->confirmResetNewPasswordButton, &QPushButton::clicked, this, &AuthorizationForm::confirmNewPassword);
+    connect(ui->backResetNewPasswordButton, &QPushButton::clicked, this, &AuthorizationForm::backEnterCode);
     connect(socket, &SocketClient::authorizationSuccessfully, this, &AuthorizationForm::successfullyAuthorization);
     connect(socket, &SocketClient::authorizationError, this, &AuthorizationForm::errorAuthorization);
+    connect(socket, &SocketClient::sendCodeEmailResetPasswordSuccessfully, this, &AuthorizationForm::successfullySendCodeEmail);
+    connect(socket, &SocketClient::sendCodeEmailResetPasswordError, this, &AuthorizationForm::errorSendCodeEmail);
+    connect(socket, &SocketClient::checkCodeEmailResetPasswordSuccessfully, this, &AuthorizationForm::successfullyContinueEnterCode);
+    connect(socket, &SocketClient::checkCodeEmailResetPasswordError, this, &AuthorizationForm::errorContinueEnterCode);
+    connect(socket, &SocketClient::confirmResetNewPasswordSuccessfully, this, &AuthorizationForm::successfullyConfirmNewPassword);
+    connect(socket, &SocketClient::confirmResetNewPasswordError, this, &AuthorizationForm::errorConfirmNewPassword);
 }
 void AuthorizationForm::loginButtonClick()
 {
@@ -83,6 +97,153 @@ void AuthorizationForm::forgetPassword()
     ui->stackedWidget->setCurrentIndex(1);
     setMinimumSize(392,118);
     setMaximumSize(392,118);
+}
+void AuthorizationForm::continueForgetPassword()
+{
+    ui->emailEditForgetPassword->setStyleSheet("QLineEdit { font: 10pt \"Sitka\";}");
+    ui->emailEditForgetPassword->setEnabled(false);
+    ui->continueForgetPasswordButton->setEnabled(false);
+    ui->backForgetPasswordButton->setEnabled(false);
+    ui->continueForgetPasswordButton->setText("");
+    ui->continueForgetPasswordButton->startSpinner();
+    m_socket->sendCodeEmailResetPassword(ui->emailEditForgetPassword->text());
+}
+void AuthorizationForm::backEnterCode()
+{
+    ui->stackedWidget->setCurrentIndex(1);
+    setMinimumSize(392,118);
+    setMaximumSize(392,118);
+}
+
+void AuthorizationForm::successfullySendCodeEmail()
+{
+    ui->emailEditForgetPassword->setEnabled(true);
+    ui->continueForgetPasswordButton->setEnabled(true);
+    ui->backForgetPasswordButton->setEnabled(true);
+    ui->continueForgetPasswordButton->setText("Продолжить");
+    ui->continueForgetPasswordButton->stopSpinner();
+    ui->resetPasswordEmailLabel->setText("На почту " + ui->emailEditForgetPassword->text() +  " был выслан код, введите го в поле ниже:");
+    ui->stackedWidget->setCurrentIndex(3);
+    setMinimumSize(392,186);
+    setMaximumSize(392,186);
+}
+void AuthorizationForm::errorSendCodeEmail(const QString& error)
+{
+    if(error == "The user was not found by mail.")
+    {
+        ui->emailEditForgetPassword->setStyleSheet("QLineEdit { font: 10pt \"Sitka\"; border: 1px solid red;}");
+        ui->emailNotFound->show();
+    }
+    else
+    {
+        ui->closeButtonLabelWidget->hide();
+        ui->cancelButtonLabelWidget->show();
+        ui->backButtonLabelWidget->show();
+        ui->stackedWidget->setCurrentIndex(2);
+        setMinimumSize(480,130);
+        setMaximumSize(480,130);
+        ui->labelWidgetText->setText(error);
+    }
+    ui->emailEditForgetPassword->setEnabled(true);
+    ui->continueForgetPasswordButton->setEnabled(true);
+    ui->backForgetPasswordButton->setEnabled(true);
+    ui->continueForgetPasswordButton->setText("Продолжить");
+    ui->continueForgetPasswordButton->stopSpinner();
+}
+void AuthorizationForm::continueEnterCode()
+{
+    ui->codeLineEdit->resetStyle();
+    if(ui->codeLineEdit->code().length() < 6)
+    {
+        ui->codeLineEdit->applyErrorStyle();
+        return;
+    }
+    ui->codeLineEdit->setEnabled(false);
+    ui->continueButtonEnterCode->setEnabled(false);
+    ui->backButtonEnterCode->setEnabled(false);
+    ui->continueButtonEnterCode->startSpinner();
+    m_socket->checkCodeEmailResetPassword(ui->codeLineEdit->code());
+}
+void AuthorizationForm::successfullyContinueEnterCode()
+{
+    ui->codeLineEdit->resetStyle();
+    ui->codeLineEdit->setEnabled(true);
+    ui->continueButtonEnterCode->setEnabled(true);
+    ui->backButtonEnterCode->setEnabled(true);
+    ui->continueButtonEnterCode->stopSpinner();
+    ui->continueButtonEnterCode->setText("Продолжить");
+    ui->stackedWidget->setCurrentIndex(4);
+    setMinimumSize(480,160);
+    setMaximumSize(480,160);
+}
+void AuthorizationForm::errorContinueEnterCode(const QString& error)
+{
+    if(error == "Incorrect or expired reset code.")
+    {
+        ui->codeLineEdit->applyErrorStyleAll();
+    }
+    else
+    {
+        ui->closeButtonLabelWidget->hide();
+        ui->cancelButtonLabelWidget->show();
+        ui->backButtonLabelWidget->show();
+        ui->stackedWidget->setCurrentIndex(2);
+        setMinimumSize(480,130);
+        setMaximumSize(480,130);
+        ui->labelWidgetText->setText(error);
+    }
+    ui->codeLineEdit->setEnabled(true);
+    ui->continueButtonEnterCode->setEnabled(true);
+    ui->backButtonEnterCode->setEnabled(true);
+    ui->continueButtonEnterCode->stopSpinner();
+    ui->continueButtonEnterCode->setText("Продолжить");
+}
+void AuthorizationForm::confirmNewPassword()
+{
+    ui->codeLineEdit->resetStyle();
+    if(ui->codeLineEdit->code().length() < 6)
+    {
+        ui->codeLineEdit->applyErrorStyle();
+        return;
+    }
+    ui->confirmResetNewPasswordButton->setEnabled(false);
+    ui->resetNewPasswordEdit->setEnabled(false);
+    ui->continueButtonEnterCode->setEnabled(false);
+    ui->backResetNewPasswordButton->setEnabled(false);
+    ui->confirmResetNewPasswordButton->setText("");
+    ui->confirmResetNewPasswordButton->startSpinner();
+    m_socket->confirmResetNewPassword(ui->resetNewPasswordEdit->text());
+}
+void AuthorizationForm::successfullyConfirmNewPassword()
+{
+
+    ui->resetNewPasswordEdit->setEnabled(true);
+    ui->confirmResetNewPasswordButton->setEnabled(true);
+    ui->backResetNewPasswordButton->setEnabled(true);
+    ui->confirmResetNewPasswordButton->stopSpinner();
+    ui->confirmResetNewPasswordButton->setText("Подтвердить");
+    ui->closeButtonLabelWidget->show();
+    ui->cancelButtonLabelWidget->hide();
+    ui->backButtonLabelWidget->hide();
+    ui->stackedWidget->setCurrentIndex(2);
+    setMinimumSize(480,130);
+    setMaximumSize(480,130);
+    ui->labelWidgetText->setText("Пароль изменен успешно.");
+}
+void AuthorizationForm::errorConfirmNewPassword(const QString& error)
+{
+    ui->closeButtonLabelWidget->hide();
+    ui->cancelButtonLabelWidget->show();
+    ui->backButtonLabelWidget->show();
+    ui->stackedWidget->setCurrentIndex(2);
+    setMinimumSize(480,130);
+    setMaximumSize(480,130);
+    ui->labelWidgetText->setText(error);
+    ui->resetNewPasswordEdit->setEnabled(true);
+    ui->confirmResetNewPasswordButton->setEnabled(true);
+    ui->backResetNewPasswordButton->setEnabled(true);
+    ui->confirmResetNewPasswordButton->stopSpinner();
+    ui->confirmResetNewPasswordButton->setText("Подтвердить");
 }
 
 AuthorizationForm::~AuthorizationForm()

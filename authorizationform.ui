@@ -41,7 +41,7 @@
     </size>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>4</number>
    </property>
    <widget class="QWidget" name="page">
     <widget class="QWidget" name="widget" native="true">
@@ -439,9 +439,9 @@ QPushButton:hover {
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>4</y>
+        <y>0</y>
         <width>480</width>
-        <height>16</height>
+        <height>30</height>
        </rect>
       </property>
       <property name="styleSheet">
@@ -458,6 +458,247 @@ QPushButton:hover {
      </widget>
     </widget>
    </widget>
+   <widget class="QWidget" name="page_4">
+    <widget class="QWidget" name="widget_3" native="true">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>392</width>
+       <height>229</height>
+      </rect>
+     </property>
+     <widget class="QLabel" name="label_4">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>392</width>
+        <height>30</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLabel {
+	font: 700 16pt &quot;Sitka&quot;;
+}</string>
+      </property>
+      <property name="text">
+       <string>ВОССТАНОВЛЕНИЕ ПАРОЛЯ</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="resetPasswordEmailLabel">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>30</y>
+        <width>380</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLabel {
+	font: 10pt &quot;Sitka&quot;;
+}</string>
+      </property>
+      <property name="text">
+       <string>На почту user123456789@email.ru был выслан код, введите го в поле ниже:</string>
+      </property>
+      <property name="scaledContents">
+       <bool>false</bool>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="OTPInputWidget" name="codeLineEdit" native="true">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>70</y>
+        <width>271</width>
+        <height>80</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="backButtonEnterCode">
+      <property name="geometry">
+       <rect>
+        <x>310</x>
+        <y>160</y>
+        <width>75</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Назад</string>
+      </property>
+     </widget>
+     <widget class="SpinnerButton" name="continueButtonEnterCode">
+      <property name="geometry">
+       <rect>
+        <x>224</x>
+        <y>160</y>
+        <width>81</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Продолжить</string>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="page_5">
+    <widget class="QWidget" name="widget_4" native="true">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>480</width>
+       <height>231</height>
+      </rect>
+     </property>
+     <widget class="QLabel" name="label_8">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>480</width>
+        <height>30</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLabel {
+	font: 700 16pt &quot;Sitka&quot;;
+}</string>
+      </property>
+      <property name="text">
+       <string>ВОССТАНОВЛЕНИЕ ПАРОЛЯ</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QWidget" name="verticalLayoutWidget_2">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>40</y>
+        <width>448</width>
+        <height>80</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <property name="spacing">
+          <number>55</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_10">
+           <property name="styleSheet">
+            <string notr="true">QLabel {
+	font: 10pt &quot;Sitka&quot;;
+}</string>
+           </property>
+           <property name="text">
+            <string>НОВЫЙ ПАРОЛЬ</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_5">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QLineEdit" name="resetNewPasswordEdit"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="errorResetPasswordLabel">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>2</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>10</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QLabel 
+{
+	font: 350 7pt &quot;Segoe UI&quot;;
+    color: red;
+}</string>
+             </property>
+             <property name="text">
+              <string>                                                                                         *Пароли не совпадают</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <item>
+          <widget class="QLabel" name="label_11">
+           <property name="styleSheet">
+            <string notr="true">QLabel {
+	font: 10pt &quot;Sitka&quot;;
+}</string>
+           </property>
+           <property name="text">
+            <string>ПОДТВЕРДИТЕ ПАРОЛЬ</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="confirmResetNewPasswordEdit"/>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="SpinnerButton" name="confirmResetNewPasswordButton">
+      <property name="geometry">
+       <rect>
+        <x>290</x>
+        <y>130</y>
+        <width>101</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Сменить пароль</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="backResetNewPasswordButton">
+      <property name="geometry">
+       <rect>
+        <x>400</x>
+        <y>130</y>
+        <width>75</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Отмена</string>
+      </property>
+     </widget>
+    </widget>
+   </widget>
   </widget>
  </widget>
  <customwidgets>
@@ -465,6 +706,12 @@ QPushButton:hover {
    <class>SpinnerButton</class>
    <extends>QPushButton</extends>
    <header>spinnerbutton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>OTPInputWidget</class>
+   <extends>QWidget</extends>
+   <header>otpinputwidget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
