@@ -22,9 +22,7 @@ signals:
     void error(const QString &errorText);
 private:
     QString getHardwareData() const;
-#ifdef Q_OS_WIN
     QString runCommand(const QString &command, const QStringList &arguments) const;
-#endif
 };
 
 #endif // KEYCHAINCLASS_H

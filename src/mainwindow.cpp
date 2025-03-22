@@ -105,7 +105,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     trayIcon->show();
 
-    KeyChainClass* keychain;
+    KeyChainClass* keychain = new KeyChainClass(this);
     m_socket = new SocketClient("192.168.0.217", 1234, keychain, taskList, this);
     connect(keychain, &KeyChainClass::tokenRestored, this, [&, this](const QString& m_token)
             {

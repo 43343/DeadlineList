@@ -3,6 +3,9 @@
 #include <QProcess>
 #include <QStringList>
 #include <QString>
+#ifdef Q_OS_LINUX
+#include <QFile>
+#endif
 
 KeyChainClass::KeyChainClass(QObject *parent)
     : QObject(parent)
@@ -79,7 +82,6 @@ void KeyChainClass::writeUserId(const QString &value)
     });
     m_writeCredentialUserIdJob->start();
 }
-#ifdef Q_OS_WIN
 QString KeyChainClass::runCommand(const QString &command, const QStringList &arguments) const
 {
     QProcess process;
@@ -91,7 +93,6 @@ QString KeyChainClass::runCommand(const QString &command, const QStringList &arg
     QString output = process.readAllStandardOutput();
     return output;
 }
-#endif
 QString KeyChainClass::getHardwareData() const
 {
     QString output = "";
@@ -117,7 +118,7 @@ QString KeyChainClass::getHardwareData() const
     }
     QString outputDiskSerialNumber = runCommand("udevadm", QStringList() << "info" << "--query=all" << "--name=/dev/sda");
     // В выводе ищем строку, содержащую "ID_SERIAL="
-    QStringList lines = outputDiskSerialNumber.split('\n', QString::SkipEmptyParts);
+    QStringList lines = outputDiskSerialNumber.split('\n', Qt::SkipEmptyParts);
     for (const QString &line : lines) {
         if (line.contains("ID_SERIAL=")) {
             int pos = line.indexOf("ID_SERIAL=");
