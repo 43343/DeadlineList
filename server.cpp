@@ -1,5 +1,6 @@
 #include "server.h"
 #include <QRandomGenerator>
+#include <QJsonArray>
 #include "smtpclient.h"
 #include "smtpcredentials.h"
 
@@ -27,12 +28,13 @@ Server::Server()
             qDebug() << "Ошибка создания таблицы sessions:" << query.lastError().text();
         }
         if (!query.exec("CREATE TABLE IF NOT EXISTS tasks ("
-                        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                        "id TEXT PRIMARY KEY, "
                         "user_id INTEGER, "
                         "done INTEGER, "
-                        "title TEXT,"
+                        "task TEXT,"
                         "date TEXT,"
                         "datetime TEXT,"
+                        "changed TEXT,"
                         "FOREIGN KEY(user_id) REFERENCES users(user_id))")) {
             qDebug() << "Ошибка создания таблицы tasks:" << query.lastError().text();
         }
@@ -69,244 +71,487 @@ void Server::processRequest(QTcpSocket *socket)
 
     QJsonObject obj = doc.object();
     QString type = obj["type"].toString();
+    if (type == "sync_all_tasks")
+    {
+        syncAllTasks(obj, socket);
+    }
+    if (type == "task_update") {
+        taskUpdate(obj, socket);
+    }
+    if (type == "task_delete") {
+        taskDelete(obj, socket);
+    }
     if(type == "reset_password_send_code")
     {
-        QString email = obj["email"].toString();
-        QJsonObject response;
-        QString userId;
-        if(findUserByEmail(email, userId))
-        {
-            QString resetCode = generateCode();
-            socket->setProperty("code", resetCode);
-            response["type"] = "reset_password_send_code_reply";
-            response["status"] = "ok";
-            response["user_id"] = userId;
-            response["message"] = "The user was found by mail.";
-            QString smtpHost = "smtp.yandex.ru";
-            quint16 smtpPort = 465;
-            QString emailOwn;
-            QString password;
-            loadSmtpCredentials(emailOwn, password);
-            SMTPClient client(smtpHost, smtpPort, emailOwn, password);
-            client.sendMail(emailOwn, email, "Код для восстановления пароля.", resetCode);
-        }
-        else
-        {
-            response["type"] = "reset_password_send_code_reply";
-            response["status"] = "error";
-            response["message"] = "The user was not found by mail.";
-        }
-        QJsonDocument replyDoc(response);
-        sendResponse(socket, response);
-        qDebug() << replyDoc;
+        resetPasswordSendCode(obj, socket);
     }
     if(type == "reset_password_check_code")
     {
-        QString userId = obj["user_id"].toString();
-        QString providedCode = obj["code"].toString();
-
-        // Извлекаем ранее сохранённый код
-        QString storedCode = socket->property("code").toString();
-
-        QJsonObject response;
-        if (!storedCode.isEmpty() && (providedCode == storedCode)) {
-            response["type"]    = "reset_password_check_code_reply";
-            response["status"]  = "ok";
-            response["message"] = "The reset code is correct.";
-        } else {
-            response["type"]    = "reset_password_check_code_reply";
-            response["status"]  = "error";
-            response["message"] = "Incorrect or expired reset code.";
-        }
-        QJsonDocument replyDoc(response);
-        sendResponse(socket, response);
-        qDebug() << replyDoc;
-        socket->flush();
+        resetPasswordCheckCode(obj, socket);
     }
     if(type == "reset_password_new")
     {
-        QString userId = obj["user_id"].toString();
-        QString newPassword = obj["new_password"].toString();
-
-        QJsonObject response;
-        if (resetPassword(userId, newPassword)) {
-            QString sessionToken = createSession(userId.toInt());
-            response["type"]    = "reset_password_new_reply";
-            response["session"] = cryptData.decryptQString(sessionToken);
-            response["user_id"] = userId;
-            response["status"]  = "ok";
-            response["message"] = "Password changed successfully.";
-        } else {
-            response["type"]    = "reset_password_new_reply";
-            response["status"]  = "error";
-            response["message"] = "Couldn't change password.";
-        }
-        QJsonDocument replyDoc(response);
-        sendResponse(socket, response);
-        qDebug() << replyDoc;
-        socket->flush();
+        resetPasswordNew(obj, socket);
     }
     if (type == "change_password")
     {
-        QString userId = obj["user_id"].toString();
-        QString token = obj["session"].toString();
-        QString oldPassword = cryptData.encryptQString(obj["old_password"].toString());
-        QString newPassword = obj["new_password"].toString();
-        QJsonObject response;
-        if(changePassword(token, userId, oldPassword, newPassword))
-        {
-            response["type"] = "change_password_reply";
-            response["session"] = token;
-            response["user_id"] = userId;
-            response["status"] = "ok";
-            response["message"] = "Password changed successfully.";
-        }
-        else
-        {
-            response["type"] = "change_password_reply";
-            response["status"] = "error";
-            response["session"] = token;
-            response["user_id"] = userId;
-            response["message"] = "The old password was entered incorrectly.";
-        }
-        QJsonDocument replyDoc(response);
-        sendResponse(socket, response);
-        qDebug() << replyDoc;
+        changePassword(obj, socket);
     }
     if (type == "delete_session")
     {
-        QString token = cryptData.encryptQString(obj["session"].toString());
-        qDebug() << "Получен запрос удаления сесиии:" << token;
-        QJsonObject response;
-        if(deleteSession(token))
-        {
-            response["type"] = "delete_session_reply";
-            response["status"] = "ok";
-            response["message"] = "Delete session is successful.";
-        }
-        else
-        {
-            response["status"] = "error";
-            response["type"] = "delete_session_reply";
-            response["message"] = "Delete session error.";
-        }
-        QJsonDocument replyDoc(response);
-        sendResponse(socket, response);
-        qDebug() << replyDoc;
+        deleteSession(obj, socket);
     }
-    if (type == "registration") {
-        QString email = obj["email"].toString();
-        QString password = obj["password"].toString();
-        qDebug() << "Получен запрос регистрации:" << email;
+    if (type == "registration_send_code") {
+        registrationSendCode(obj, socket);
+    }
+    if (type == "registration_check_code") {
+        registrationCheckCode(obj, socket);
+    }
+    if (type == "authorization") {
+        authorization(obj, socket);
+    }
+    if (type == "check_session") {
+        checkSession(obj, socket);
+    }
+}
+void Server::syncAllTasks(QJsonObject &obj, QTcpSocket *socket)
+{
+    qDebug() << "Получен запрос синхронизации задач";
+    QString userId = cryptData.encryptQString(obj["user_id"].toString());
+    QJsonObject response;
+    QJsonArray tasks;
 
-        QJsonObject response;
+    QSqlQuery query;
+    query.prepare("SELECT * FROM tasks WHERE user_id = :user_id");
+    query.bindValue(":user_id", userId.toInt());
+
+    if(query.exec()) {
+        while(query.next()) {
+            QJsonObject task;
+            task["task_id"] = query.value("id").toString();
+            task["done"] = query.value("done").toBool();
+            task["task"] = cryptData.decryptQString(query.value("task").toString());
+            task["date"] = cryptData.decryptQString(query.value("date").toString());
+            task["datetime"] = cryptData.decryptQString(query.value("datetime").toString());
+            task["changed"] = cryptData.decryptQString(query.value("changed").toString());
+            tasks.append(task);
+        }
+    }
+
+    response["tasks"] = tasks;
+    QJsonDocument replyDoc(response);
+    sendResponse(socket, response);
+}
+void Server::taskUpdate(QJsonObject &obj, QTcpSocket *socket)
+{
+    QJsonObject response;
+    QString userId = cryptData.encryptQString(obj["user_id"].toString());
+    QString taskId = obj["task_id"].toString();
+
+    QSqlDatabase::database().transaction();
+    QSqlQuery checkQuery;
+    checkQuery.prepare(
+        "SELECT changed FROM tasks "
+        "WHERE id = :id AND user_id = :user_id"
+        );
+    checkQuery.bindValue(":id", taskId);
+    checkQuery.bindValue(":user_id", userId.toInt());
+
+    if (checkQuery.exec() && checkQuery.next()) {
+        QDateTime serverChanged = QDateTime::fromString(
+            cryptData.decryptQString(checkQuery.value("changed").toString()),
+            Qt::ISODate
+            );
+        QDateTime clientChanged = QDateTime::fromString(
+            obj["changed"].toString(), Qt::ISODate
+            );
+
+        if (serverChanged > clientChanged) {
+            qDebug() << "The task version on the server is newer.";
+            return;
+        }
+    }
+    try {
+        qDebug() << "Получен запрос обновления задач";
+
+        // Валидация
+        if (!obj.contains("task") || !obj.contains("changed")) {
+            throw std::runtime_error("Invalid task format");
+        }
+
+        QSqlQuery query;
+        query.prepare(
+            "INSERT OR REPLACE INTO tasks "
+            "(id, user_id, done, task, date, datetime, changed) "
+            "VALUES (:id, :user_id, :done, :task, :date, :datetime, :changed)"
+            );
+
+        query.bindValue(":id", taskId);
+        query.bindValue(":user_id", userId.toInt());
+        query.bindValue(":done", obj["done"].toBool());
+        query.bindValue(":task", cryptData.encryptQString(obj["task"].toString())); // Исправлено task -> title
+        query.bindValue(":date", cryptData.encryptQString(obj["date"].toString()));
+        query.bindValue(":datetime", cryptData.encryptQString(
+                                         QDateTime::fromString(obj["datetime"].toString(), Qt::ISODate)
+                                             .toString(Qt::ISODate)
+                                         ));
+        query.bindValue(":changed", cryptData.encryptQString(
+                                        QDateTime::fromString(obj["changed"].toString(), Qt::ISODate)
+                                            .toString(Qt::ISODate)
+                                        ));
+
+        if (!query.exec()) {
+            throw std::runtime_error(
+                QString("Failed to update task: %1")
+                    .arg(query.lastError().text())
+                    .toStdString()
+                );
+        }
+        query.prepare("SELECT * FROM tasks WHERE user_id = :user_id");
+        query.bindValue(":user_id", userId.toInt());
+        if(query.exec()) {
+            QJsonArray tasks;
+            while(query.next()) {
+                QJsonObject task;
+                task["task_id"] = query.value("id").toString();
+                task["done"] = query.value("done").toBool();
+                task["task"] = cryptData.decryptQString(query.value("task").toString());
+                task["date"] = cryptData.decryptQString(query.value("date").toString());
+                task["datetime"] = cryptData.decryptQString(query.value("datetime").toString());
+                task["changed"] = cryptData.decryptQString(query.value("changed").toString());
+                tasks.append(task);
+            }
+            response["tasks"] = tasks;
+        }
+    }
+    catch (const std::exception& e)
+    {
+        QSqlDatabase::database().rollback();
+        response["status"] = "error";
+        response["message"] = QString("Sync failed: %1").arg(e.what());
+    }
+    QJsonDocument replyDoc(response);
+    sendResponse(socket, response);
+}
+void Server::taskDelete(QJsonObject &obj, QTcpSocket *socket)
+{
+    QJsonObject response;
+    QString userId = cryptData.encryptQString(obj["user_id"].toString());
+    QString taskId = obj["task_id"].toString();
+
+    QSqlDatabase::database().transaction();
+    QSqlQuery checkQuery;
+    checkQuery.prepare(
+        "SELECT changed FROM tasks "
+        "WHERE id = :id AND user_id = :user_id"
+        );
+    checkQuery.bindValue(":id", taskId);
+    checkQuery.bindValue(":user_id", userId.toInt());
+
+    if (checkQuery.exec() && checkQuery.next()) {
+        QDateTime serverChanged = QDateTime::fromString(
+            cryptData.decryptQString(checkQuery.value("changed").toString()),
+            Qt::ISODate
+            );
+        QDateTime clientChanged = QDateTime::fromString(
+            obj["changed"].toString(), Qt::ISODate
+            );
+
+        if (serverChanged > clientChanged) {
+            qDebug() << "The task version on the server is newer.";
+            return;
+        }
+    }
+    try {
+        qDebug() << "Получен запрос удаления задач";
+        QSqlQuery query;
+        query.prepare(
+            "DELETE FROM tasks "
+            "WHERE id = :id AND user_id = :user_id"
+            );
+        query.bindValue(":id", taskId);
+        query.bindValue(":user_id", userId.toInt());
+
+        if (!query.exec()) {
+            throw std::runtime_error(
+                QString("Failed to delete task: %1")
+                    .arg(query.lastError().text())
+                    .toStdString()
+                );
+        }
+    }
+    catch (const std::exception& e)
+    {
+        QSqlDatabase::database().rollback();
+        response["status"] = "error";
+        response["message"] = QString("Sync failed: %1").arg(e.what());
+    }
+    QJsonDocument replyDoc(response);
+    sendResponse(socket, response);
+}
+void Server::resetPasswordSendCode(QJsonObject &obj, QTcpSocket *socket)
+{
+    QString email = obj["email"].toString();
+    QJsonObject response;
+    QString userId;
+    if(findUserByEmail(email, userId))
+    {
+        QString resetCode = generateCode();
+        socket->setProperty("code", resetCode);
+        response["type"] = "reset_password_send_code_reply";
+        response["status"] = "ok";
+        response["user_id"] = userId;
+        response["message"] = "The user was found by mail.";
+        QString smtpHost = "smtp.yandex.ru";
+        quint16 smtpPort = 465;
+        QString emailOwn;
+        QString password;
+        loadSmtpCredentials(emailOwn, password);
+        SMTPClient client(smtpHost, smtpPort, emailOwn, password);
+        client.sendMail(emailOwn, email, "Код для восстановления пароля.", resetCode);
+    }
+    else
+    {
+        response["type"] = "reset_password_send_code_reply";
+        response["status"] = "error";
+        response["message"] = "The user was not found by mail.";
+    }
+    QJsonDocument replyDoc(response);
+    sendResponse(socket, response);
+    qDebug() << replyDoc;
+}
+void Server::resetPasswordCheckCode(QJsonObject &obj, QTcpSocket *socket)
+{
+    QString providedCode = obj["code"].toString();
+
+    QString storedCode = socket->property("code").toString();
+
+    QJsonObject response;
+    if (!storedCode.isEmpty() && (providedCode == storedCode)) {
+        response["type"]    = "reset_password_check_code_reply";
+        response["status"]  = "ok";
+        response["message"] = "The reset code is correct.";
+    } else {
+        response["type"]    = "reset_password_check_code_reply";
+        response["status"]  = "error";
+        response["message"] = "Incorrect or expired reset code.";
+    }
+    QJsonDocument replyDoc(response);
+    sendResponse(socket, response);
+    qDebug() << replyDoc;
+    socket->flush();
+}
+void Server::resetPasswordNew(QJsonObject &obj, QTcpSocket *socket)
+{
+    QString userId = obj["user_id"].toString();
+    QString newPassword = obj["new_password"].toString();
+
+    QJsonObject response;
+    if (resetPassword(userId, newPassword)) {
+        QString sessionToken = createSession(userId.toInt());
+        response["type"]    = "reset_password_new_reply";
+        response["session"] = cryptData.decryptQString(sessionToken);
+        response["user_id"] = userId;
+        response["status"]  = "ok";
+        response["message"] = "Password changed successfully.";
+    } else {
+        response["type"]    = "reset_password_new_reply";
+        response["status"]  = "error";
+        response["message"] = "Couldn't change password.";
+    }
+    QJsonDocument replyDoc(response);
+    sendResponse(socket, response);
+    qDebug() << replyDoc;
+}
+void Server::deleteSession(QJsonObject &obj, QTcpSocket *socket)
+{
+    QString token = cryptData.encryptQString(obj["session"].toString());
+    qDebug() << "Получен запрос удаления сесиии:" << token;
+    QJsonObject response;
+    if(deleteSession(token))
+    {
+        response["type"] = "delete_session_reply";
+        response["status"] = "ok";
+        response["message"] = "Delete session is successful.";
+    }
+    else
+    {
+        response["status"] = "error";
+        response["type"] = "delete_session_reply";
+        response["message"] = "Delete session error.";
+    }
+    QJsonDocument replyDoc(response);
+    sendResponse(socket, response);
+    qDebug() << replyDoc;
+}
+void Server::changePassword(QJsonObject &obj, QTcpSocket *socket)
+{
+    QString userId = obj["user_id"].toString();
+    QString token = obj["session"].toString();
+    QString oldPassword = cryptData.encryptQString(obj["old_password"].toString());
+    QString newPassword = obj["new_password"].toString();
+    QJsonObject response;
+    if(changePassword(token, userId, oldPassword, newPassword))
+    {
+        response["type"] = "change_password_reply";
+        response["session"] = token;
+        response["user_id"] = userId;
+        response["status"] = "ok";
+        response["message"] = "Password changed successfully.";
+    }
+    else
+    {
+        response["type"] = "change_password_reply";
+        response["status"] = "error";
+        response["session"] = token;
+        response["user_id"] = userId;
+        response["message"] = "The old password was entered incorrectly.";
+    }
+    QJsonDocument replyDoc(response);
+    sendResponse(socket, response);
+    qDebug() << replyDoc;
+}
+void Server::registrationSendCode(QJsonObject &obj, QTcpSocket *socket)
+{
+    QString email = obj["email"].toString();
+    qDebug() << "Получен запрос регистрации:" << email;
+
+    QJsonObject response;
+    if (isEmailRegistered(email)) {
+        response["status"] = "failed";
+        response["type"] = "registration_send_code_reply";
+        response["message"] = "The user with this email already exists.";
+    } else {
+        QString code = generateCode();
+        socket->setProperty("code", code);
+        response["type"] = "registration_send_code_reply";
+        response["status"] = "ok";
+        response["message"] = "The email confirmation code has been sent successfully.";
+        QString smtpHost = "smtp.yandex.ru";
+        quint16 smtpPort = 465;
+        QString emailOwn;
+        QString password;
+        loadSmtpCredentials(emailOwn, password);
+        SMTPClient client(smtpHost, smtpPort, emailOwn, password);
+        client.sendMail(emailOwn, email, "Код для восстановления пароля.", code);
+    }
+    QJsonDocument replyDoc(response);
+    sendResponse(socket, response);
+    qDebug() << replyDoc;
+}
+void Server::registrationCheckCode(QJsonObject &obj, QTcpSocket *socket)
+{
+    QString email = obj["email"].toString();
+    QString password = obj["password"].toString();
+    QString providedCode = obj["code"].toString();
+    QString storedCode = socket->property("code").toString();
+    qDebug() << "Получен запрос регистрации:" << email;
+
+    QJsonObject response;
+    if (!storedCode.isEmpty() && (providedCode == storedCode)) {
         if (isEmailRegistered(email)) {
             response["status"] = "failed";
-            response["type"] = "registration_reply";
+            response["type"] = "registration_check_code_reply";
             response["message"] = "The user with this email already exists.";
         } else {
             int userId = -1;
             if (registerNewUser(email, password, userId)) {
                 QString sessionToken = createSession(userId);
-                response["type"] = "registration_reply";
+                response["type"] = "registration_check_code_reply";
                 response["session"] = cryptData.decryptQString(sessionToken);
                 response["user_id"] = QString::number(userId);
                 response["status"] = "ok";
                 response["message"] = "Registration is successful.";
             } else {
                 response["status"] = "failed";
-                response["type"] = "registration_reply";
+                response["type"] = "registration_check_code_reply";
                 response["message"] = "Registration error.";
             }
         }
-        QJsonDocument replyDoc(response);
-        sendResponse(socket, response);
-        qDebug() << replyDoc;
     }
-    if (type == "authorization") {
-        QString email = obj["email"].toString();
-        QString password = obj["password"].toString();
-        qDebug() << "Получен запрос авторизации:" << email;
+    else {
+        response["type"]    = "registration_check_code_reply";
+        response["status"]  = "error";
+        response["message"] = "Incorrect or expired confirmation code.";
+    }
+    QJsonDocument replyDoc(response);
+    sendResponse(socket, response);
+    qDebug() << replyDoc;
+}
+void Server::authorization(QJsonObject &obj, QTcpSocket *socket)
+{
+    QString email = obj["email"].toString();
+    QString password = obj["password"].toString();
+    qDebug() << "Получен запрос авторизации:" << email;
 
-        QJsonObject response;
-        int userId = -1;
-        // Используем отдельную функцию для проверки авторизации
-        if (authorizationUser(email, password, userId)) {
-            // Если авторизация успешна, создаём сессию и отправляем session token
-            QString sessionToken = createSession(userId);
-            response["type"] = "authorization_reply";
-            response["session"] = cryptData.decryptQString(sessionToken);
-            response["user_id"] = QString::number(userId);
-            response["status"] = "ok";
-            response["message"] = "Authorization is successful.";
+    QJsonObject response;
+    int userId = -1;
+    if (authorizationUser(email, password, userId)) {
+        QString sessionToken = createSession(userId);
+        response["type"] = "authorization_reply";
+        response["session"] = cryptData.decryptQString(sessionToken);
+        response["user_id"] = QString::number(userId);
+        response["status"] = "ok";
+        response["message"] = "Authorization is successful.";
+    } else {
+        response["status"] = "failed";
+        response["type"] = "authorization_reply";
+        response["message"] = "User with this email and password not found.";
+    }
+
+    QJsonDocument replyDoc(response);
+    sendResponse(socket, response);
+    qDebug() << replyDoc;
+}
+void Server::checkSession(QJsonObject &obj, QTcpSocket *socket)
+{
+    // Получаем переданный токен
+    QString token = cryptData.encryptQString(obj["session"].toString());
+
+    // Здесь добавьте логику проверки валидности токена.
+    // Например, выполнить запрос к базе данных и проверить срок действия сессии.
+    bool isValid = checkSessionInDatabase(token); // пример функции проверки.
+
+    QJsonObject response;
+    response["type"] = "check_session_reply";
+    if (isValid) {
+        QSqlQuery updateQuery;
+        QDateTime newAuthorizationExpiresAt = QDateTime::currentDateTime().addMonths(1);
+        updateQuery.prepare("UPDATE sessions SET authorization_expires_at = :authorization_expires_at WHERE session_token = :token");
+        updateQuery.bindValue(":authorization_expires_at", cryptData.encryptQString(newAuthorizationExpiresAt.toString(Qt::ISODate)));
+        updateQuery.bindValue(":token", token);
+        if (updateQuery.exec()) {
         } else {
-            // Пользователь с таким email и паролем не найден
-            response["status"] = "failed";
-            response["type"] = "authorization_reply";
-            response["message"] = "User with this email and password not found.";
         }
-
-        QJsonDocument replyDoc(response);
-        sendResponse(socket, response);
-        qDebug() << replyDoc;
-    }
-    if (type == "check_session") {
-        // Получаем переданный токен
-        QString token = cryptData.encryptQString(obj["session"].toString());
-        qDebug() << "Получен запрос проверки сесиии:" << token;
-
-        // Здесь добавьте логику проверки валидности токена.
-        // Например, выполнить запрос к базе данных и проверить срок действия сессии.
-        bool isValid = checkSessionInDatabase(token); // пример функции проверки.
-
-        QJsonObject response;
-        response["type"] = "check_session_reply";
-        if (isValid) {
-            QSqlQuery updateQuery;
-            QDateTime newAuthorizationExpiresAt = QDateTime::currentDateTime().addMonths(1);
-            updateQuery.prepare("UPDATE sessions SET authorization_expires_at = :authorization_expires_at WHERE session_token = :token");
-            updateQuery.bindValue(":authorization_expires_at", cryptData.encryptQString(newAuthorizationExpiresAt.toString(Qt::ISODate)));
-            updateQuery.bindValue(":token", token);
+        QSqlQuery selectQuery;
+        selectQuery.prepare("SELECT user_id, expires_at FROM sessions WHERE session_token = :token");
+        selectQuery.bindValue(":token", token);
+        if (!selectQuery.exec()) {
+        }
+        int userId;
+        if (selectQuery.next()) {
+            QDateTime expiresAt = QDateTime::fromString(cryptData.decryptQString(selectQuery.value("expires_at").toString()), Qt::ISODate);
+            userId = selectQuery.value("user_id").toInt();
+            QDateTime now = QDateTime::currentDateTime();
+            if(expiresAt < now)
+            {
+                deleteSession(token);
+                token = createSession(userId);
+            }
             if (updateQuery.exec()) {
-                qDebug() << "Успешно обновлено authorization_expires_at для токена:" << token << ". Установленное уремя истечения авторизации:" << newAuthorizationExpiresAt.toString(Qt::ISODate);
             } else {
-                qDebug() << "Ошибка обновления authorization_expires_at:" << updateQuery.lastError().text();
             }
-            QSqlQuery selectQuery;
-            selectQuery.prepare("SELECT user_id, expires_at FROM sessions WHERE session_token = :token");
-            selectQuery.bindValue(":token", token);
-            if (!selectQuery.exec()) {
-                qDebug() << "Ошибка выполнения запроса проверки сессии:" << selectQuery.lastError().text();
-            }
-            int userId;
-            if (selectQuery.next()) {
-                QDateTime expiresAt = QDateTime::fromString(cryptData.decryptQString(selectQuery.value("expires_at").toString()), Qt::ISODate);
-                userId = selectQuery.value("user_id").toInt();
-                QDateTime now = QDateTime::currentDateTime();
-                if(expiresAt < now)
-                {
-                    deleteSession(token);
-                    token = createSession(userId);
-                }
-                if (updateQuery.exec()) {
-                    qDebug() << "Установленное уремя истечения срока годности токена:" << expiresAt.toString(Qt::ISODate) << ". ID пользователя:" << QString::number(userId);
-                } else {
-                    qDebug() << "Ошибка обновления authorization_expires_at:" << updateQuery.lastError().text();
-                }
-             }
-            response["status"] = "ok";
-            response["session"] = cryptData.decryptQString(token);
-            response["user_id"] = QString::number(userId);
-            response["message"] = "The session is valid.";
-        } else {
-            response["status"] = "error";
-            response["message"] = "The session is invalid.";
         }
-
-        QJsonDocument replyDoc(response);
-        sendResponse(socket, response);
-        qDebug() << replyDoc;
+        response["status"] = "ok";
+        response["session"] = cryptData.decryptQString(token);
+        response["user_id"] = QString::number(userId);
+        response["message"] = "The session is valid.";
+    } else {
+        response["status"] = "error";
+        response["message"] = "The session is invalid.";
     }
+
+    sendResponse(socket, response);
 }
 QString Server::generateCode()
 {

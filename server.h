@@ -19,6 +19,20 @@ private:
 private:
     void incomingConnection(qintptr socketDescriptor) override;
     void processRequest(QTcpSocket *socket);
+
+    void syncAllTasks(QJsonObject &obj, QTcpSocket *socket);
+    void taskUpdate(QJsonObject &obj, QTcpSocket *socket);
+    void taskDelete(QJsonObject &obj, QTcpSocket *socket);
+    void resetPasswordSendCode(QJsonObject &obj, QTcpSocket *socket);
+    void resetPasswordCheckCode(QJsonObject &obj, QTcpSocket *socket);
+    void resetPasswordNew(QJsonObject &obj, QTcpSocket *socket);
+    void changePassword(QJsonObject &obj, QTcpSocket *socket);
+    void deleteSession(QJsonObject &obj, QTcpSocket *socket);
+    void registrationSendCode(QJsonObject &obj, QTcpSocket *socket);
+    void registrationCheckCode(QJsonObject &obj, QTcpSocket *socket);
+    void authorization(QJsonObject &obj, QTcpSocket *socket);
+    void checkSession(QJsonObject &obj, QTcpSocket *socket);
+
     bool isEmailRegistered(const QString &email);
     bool resetPassword(const QString &userId, const QString &newPassword);
     bool findUserByEmail(const QString &email, QString &userId);
