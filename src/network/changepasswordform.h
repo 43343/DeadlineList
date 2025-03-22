@@ -11,7 +11,7 @@ namespace Ui {
 class ChangePasswordForm;
 }
 
-class ChangePasswordForm : public QDialog, PasswordValidator
+class ChangePasswordForm : public QDialog
 {
     Q_OBJECT
 
@@ -30,14 +30,8 @@ private slots:
     void back();
 
 private:
-    bool checkMinLength(const QString &password) const;
-    bool containsUppercase(const QString &password) const;
-    bool containsLowercase(const QString &password) const;
-    bool containsDigit(const QString &password) const;
-    bool containsSpecialChar(const QString &password) const;
-    bool noSpacesAndCyrillic(const QString &password) const;
 
-    SocketClient* mSocket;
+    SocketClient* m_socket;
 
 };
 

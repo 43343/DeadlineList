@@ -10,13 +10,14 @@
 #include <QUrl>
 #include <QFile>
 #include <QMessageBox>
-#include "edittask.h"
+#include <QUuid>
+#include "tasks/edittask.h"
 #include "settings.h"
 #include "binarydatahandler.h"
-#include "keychainclass.h"
-#include "authorizationform.h"
-#include "registrationform.h"
-#include "changepasswordform.h"
+#include "network/keychainclass.h"
+#include "network/authorizationform.h"
+#include "network/registrationform.h"
+#include "network/changepasswordform.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -29,7 +30,6 @@ MainWindow::MainWindow(QWidget *parent)
     , soundEffect(new QSoundEffect(this))
     , taskList(new QList<TaskForm*>)
     , config(new Config())
-    , socketThread(new QThread(this))
 {
     ui->setupUi(this);
     loadFromFile("config", config);
@@ -45,7 +45,6 @@ MainWindow::MainWindow(QWidget *parent)
         {
             connect(task, &TaskForm::taskDeleted, this, &MainWindow::onTaskDeleted);
             connect(task, &TaskForm::taskEdited, this, &MainWindow::onTaskEdited);
-            connect(task, &TaskForm::changeDoneTask, this, &MainWindow::changeDoneTask);
             QDateTime deadline = task->getDeadlineDateTime();
             if(currentTime.secsTo(deadline) > 0 && currentTime.secsTo(deadline) <= 3600)
             {
@@ -107,15 +106,15 @@ MainWindow::MainWindow(QWidget *parent)
     trayIcon->show();
 
     KeyChainClass* keychain;
-    mSocket = new SocketClient("192.168.0.217", 1234, keychain, this);
+    m_socket = new SocketClient("192.168.0.217", 1234, keychain, taskList, this);
     connect(keychain, &KeyChainClass::tokenRestored, this, [&, this](const QString& m_token)
             {
-                mSocket->setToken(m_token);
+                m_socket->setToken(m_token);
                 qDebug() << m_token << "mToken";
             });
     connect(keychain, &KeyChainClass::userIdRestored, this, [&, this](const QString& m_userId)
             {
-                mSocket->setUserId(m_userId);
+                m_socket->setUserId(m_userId);
                 qDebug() << m_userId << "mUserId";
             });
     connect(keychain, &KeyChainClass::error, this, [&, this](const QString &errorText)
@@ -124,14 +123,16 @@ MainWindow::MainWindow(QWidget *parent)
             });
     keychain->readToken();
     keychain->readUserId();
-
-    mSocket->moveToThread(socketThread);
-    socketThread->start();
-    connect(mSocket, &SocketClient::connected, this, &MainWindow::hideButtonWarning);
-    connect(mSocket, &SocketClient::disconnected, this, &MainWindow::showButtonWarning);
-    connect(mSocket, &SocketClient::validSession, this, &MainWindow::hideButtonWarning);
-    connect(mSocket, &SocketClient::invalidSession, this, &MainWindow::showButtonWarning);
-    connect(mSocket, &SocketClient::exitSuccessfully, this, &MainWindow::showButtonWarning);
+    connect(m_socket, &SocketClient::connected, this, &MainWindow::hideButtonWarning);
+    connect(m_socket, &SocketClient::disconnected, this, &MainWindow::showButtonWarning);
+    connect(m_socket, &SocketClient::validSession, this, &MainWindow::hideButtonWarning);
+    connect(m_socket, &SocketClient::invalidSession, this, &MainWindow::showButtonWarning);
+    connect(m_socket, &SocketClient::exitSuccessfully, this, &MainWindow::showButtonWarning);
+    connect(m_socket, &SocketClient::newTaskSynced, this, [&, this] (TaskForm* newTaskSynced)
+            {
+                connect(newTaskSynced, &TaskForm::taskDeleted, this, &MainWindow::onTaskDeleted);
+                connect(newTaskSynced, &TaskForm::taskEdited, this, &MainWindow::onTaskEdited);
+    });
 
     updateTaskVisibility();
 }
@@ -174,10 +175,10 @@ void MainWindow::showWindow() {
     animation->start(QAbstractAnimation::DeleteWhenStopped);
 }
 void MainWindow::showUserMenu() {
-    if(mSocket->getConnected())
+    if(m_socket->getConnected())
     {
         QPoint pos = ui->userButton->mapToGlobal(QPoint(0, ui->userButton->height()));
-        if(!mSocket->getStatusAuthorization())
+        if(!m_socket->getStatusAuthorization())
         {
             userRegisterMenu->exec(pos);
         }
@@ -188,29 +189,29 @@ void MainWindow::showUserMenu() {
     }
 }
 void MainWindow::onLogin() {
-    AuthorizationForm autorizationForm(mSocket, this);
+    AuthorizationForm autorizationForm(m_socket, this);
     autorizationForm.exec();
 }
 void MainWindow::onRegistration()
 {
-    RegistrationForm registrationForm(mSocket, this);
+    RegistrationForm registrationForm(m_socket, this);
     registrationForm.exec();
 }
 void MainWindow::onExit()
 {
-    mSocket->exitUser();
+    m_socket->exitUser();
 }
 void MainWindow::onChangePassword()
 {
-    ChangePasswordForm changePasswordForm(mSocket, this);
+    ChangePasswordForm changePasswordForm(m_socket, this);
     changePasswordForm.exec();
 }
 void MainWindow::showWarning()
 {
-    if(!mSocket->getConnected())
+    if(!m_socket->getConnected())
         QMessageBox::warning(nullptr, "Хьюстен, у нас проблема",
                          "Нет соединения с сервером.");
-    else if(!mSocket->getStatusAuthorization())
+    else if(!m_socket->getStatusAuthorization())
         QMessageBox::warning(nullptr, "Хьюстен, у нас возможности",
                              "Авторизуйся в аккаунте чтобы сохранять таски между устройствами.");
 }
@@ -226,12 +227,11 @@ void MainWindow::onAddButtonClicked()
     switch (addTask.exec()) {
     case QDialog::Accepted:
         qDebug() << "Accepted";
-        newTask->setParameters(addTask.getTask(), addTask.getDeadlineTime(), addTask.getDeadlineDateTime());
+        newTask->setParameters(addTask.getTask(), addTask.getDeadlineTime(), addTask.getDeadlineDateTime(), QDateTime::currentDateTime(), QUuid::createUuid().toString());
         //layout->addWidget(newTask);
         taskList->append(newTask);
         connect(newTask, &TaskForm::taskDeleted, this, &MainWindow::onTaskDeleted);
         connect(newTask, &TaskForm::taskEdited, this, &MainWindow::onTaskEdited);
-        connect(newTask, &TaskForm::changeDoneTask, this, &MainWindow::changeDoneTask);
         if(currentTime.secsTo(newTask->getDeadlineDateTime()) > 0 && currentTime.secsTo(newTask->getDeadlineDateTime()) <= 3600)
         {
             notifiedEndingSoon.insert(newTask);
@@ -243,6 +243,7 @@ void MainWindow::onAddButtonClicked()
         }
         overwritingFile("tasks", taskList);
         updateTaskVisibility();
+        m_socket->syncTasks({newTask});
         break;
     case QDialog::Rejected:
         qDebug() << "Rejected";
@@ -254,7 +255,7 @@ void MainWindow::onAddButtonClicked()
     }
 }
 
-void MainWindow::onTaskDeleted(TaskForm *task) {
+void MainWindow::onTaskDeleted(TaskForm *task, DeletedTaskData deletedTask) {
     taskList->removeOne(task); // Remove from list
     if (notifiedMissedDeadline.contains(task)) {
         notifiedMissedDeadline.remove(task);
@@ -268,23 +269,30 @@ void MainWindow::onTaskDeleted(TaskForm *task) {
     }
     qDebug() << taskList;
     overwritingFile("tasks", taskList);
+    m_socket->syncTasks({task});
 }
 void MainWindow::onTaskEdited(TaskForm *task) {
+    qDebug() << "я здесь";
     QDateTime currentTime = QDateTime::currentDateTime();
     QDateTime deadline = task->getDeadlineDateTime();
     if(notifiedEndingSoon.contains(task) && currentTime < deadline && currentTime.secsTo(deadline) > 3600)
     {
         notifiedEndingSoon.remove(task);
     }
+    else if(!notifiedEndingSoon.contains(task) && currentTime.secsTo(deadline) > 0 && currentTime.secsTo(deadline) <= 3600)
+    {
+        notifiedEndingSoon.insert(task);
+    }
     if(notifiedMissedDeadline.contains(task) && currentTime < deadline)
     {
         notifiedMissedDeadline.remove(task);
     }
+    else if(!notifiedMissedDeadline.contains(task) && currentTime >= deadline)
+    {
+        notifiedMissedDeadline.insert(task);
+    }
     overwritingFile("tasks", taskList);
-}
-void MainWindow::changeDoneTask()
-{
-    overwritingFile("tasks", taskList);
+    m_socket->syncTasks({task});
 }
 void MainWindow::showAllTasks() {
     currentFilter = All;
@@ -427,7 +435,7 @@ void MainWindow::showButtonWarning()
 }
 void MainWindow::hideButtonWarning()
 {
-    if(mSocket->getStatusAuthorization())
+    if(m_socket->getStatusAuthorization())
         ui->warningButton->hide();
 }
 
@@ -439,10 +447,6 @@ void MainWindow::onSettingsButtonClicked()
 }
 
 void MainWindow::quitApplication() {
-    if (socketThread->isRunning()) {
-        socketThread->quit();
-        socketThread->wait();
-    }
     trayIcon->hide();
     QApplication::quit();
 }

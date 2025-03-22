@@ -21,7 +21,7 @@ private slots:
 
 private:
     Ui::Settings *ui;
-    Config* currentConfig;
+    Config* m_config;
 
 private slots:
     void save();

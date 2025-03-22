@@ -5,7 +5,7 @@
 RegistrationForm::RegistrationForm(SocketClient* socket, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::RegistrationForm)
-    , mSocket(socket)
+    , m_socket(socket)
 {
     ui->setupUi(this);
     ui->passwordEdit->setEchoMode(QLineEdit::Password);
@@ -20,47 +20,17 @@ RegistrationForm::RegistrationForm(SocketClient* socket, QWidget *parent)
     ui->noSpacesAndCyrillic->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:black }");
     ui->emailEdit->setStyleSheet("QLineEdit { font: 10pt \"Sitka\";}");
     connect(ui->passwordEdit, &QLineEdit::textChanged, this, &RegistrationForm::validatePassword);
-    connect(ui->registerButton, &QPushButton::clicked, this, &RegistrationForm::registrationButtonClick);
+    connect(ui->registerButton, &QPushButton::clicked, this, &RegistrationForm::sendCodeRegistrationButtonClick);
+    connect(ui->confirmationButtonEnterCode, &QPushButton::clicked, this, &RegistrationForm::checkCodeRegistrationButtonClick);
     connect(ui->cancelButton, &QPushButton::clicked, this, &QDialog::reject);
     connect(ui->cancelButtonLabelWidget, &QPushButton::clicked, this, &QDialog::reject);
     connect(ui->closeButtonLabelWidget, &QPushButton::clicked, this, &QDialog::accept);
     connect(ui->backButtonLabelWidget, &QPushButton::clicked, this, &RegistrationForm::back);
-    connect(socket, &SocketClient::registrationSuccessfully, this, &RegistrationForm::successfullyRegistration);
-    connect(socket, &SocketClient::registrationError, this, &RegistrationForm::errorRegistration);
-}
-bool RegistrationForm::checkMinLength(const QString &password) const {
-    return password.length() >= 8;
-}
-
-
-bool RegistrationForm::containsUppercase(const QString &password) const {
-    QRegularExpression re("[A-Z]");
-    return re.match(password).hasMatch();
-}
-
-
-bool RegistrationForm::containsLowercase(const QString &password) const {
-    QRegularExpression re("[a-z]");
-    return re.match(password).hasMatch();
-}
-
-
-bool RegistrationForm::containsDigit(const QString &password) const {
-    QRegularExpression re("[0-9]");
-    return re.match(password).hasMatch();
-}
-
-
-bool RegistrationForm::containsSpecialChar(const QString &password) const {
-    // Символ '*' экранируется обратным слэшем.
-    QRegularExpression re("[!@#$%^\\*]");
-    return re.match(password).hasMatch();
-}
-
-
-bool RegistrationForm::noSpacesAndCyrillic(const QString &password) const {
-    QRegularExpression re("[а-яА-ЯёЁ]");
-    return !re.match(password).hasMatch() && !password.contains(' ');
+    connect(ui->backButtonEnterCode, &QPushButton::clicked, this, &RegistrationForm::back);
+    connect(socket, &SocketClient::sendCodeRegistrationSuccessfully, this, &RegistrationForm::successfullySendCodeRegistration);
+    connect(socket, &SocketClient::sendCodeRegistrationError, this, &RegistrationForm::errorSendCodeRegistration);
+    connect(socket, &SocketClient::checkCodeRegistrationSuccessfully, this, &RegistrationForm::successfullyCheckCodeRegistration);
+    connect(socket, &SocketClient::checkCodeRegistrationError, this, &RegistrationForm::errorCheckCodeRegistration);
 }
 
 void RegistrationForm::validatePassword()
@@ -85,7 +55,7 @@ bool RegistrationForm::validEmail(const QString &email) const
     QRegularExpressionMatch match = emailRegex.match(email);
     return match.hasMatch();
 }
-void RegistrationForm::registrationButtonClick()
+void RegistrationForm::sendCodeRegistrationButtonClick()
 {
 
     ui->errorEmail->hide();
@@ -113,9 +83,24 @@ void RegistrationForm::registrationButtonClick()
     ui->registerButton->setEnabled(false);
     ui->registerButton->setText("");
     ui->registerButton->startSpinner();
-    mSocket->registerUser(ui->emailEdit->text(), ui->passwordEdit->text());
+    m_socket->sendCodeRegisterUser(ui->emailEdit->text());
 }
-void RegistrationForm::successfullyRegistration()
+void RegistrationForm::checkCodeRegistrationButtonClick()
+{
+    ui->codeLineEdit->resetStyle();
+    if(ui->codeLineEdit->code().length() < 6)
+    {
+        ui->codeLineEdit->applyErrorStyle();
+        return;
+    }
+    ui->codeLineEdit->setEnabled(false);
+    ui->confirmationButtonEnterCode->setEnabled(false);
+    ui->backButtonEnterCode->setEnabled(false);
+    ui->confirmationButtonEnterCode->setText("");
+    ui->confirmationButtonEnterCode->startSpinner();
+    m_socket->checkCodeRegisterUser(ui->emailEdit->text(), ui->passwordEdit->text(), ui->codeLineEdit->code());
+}
+void RegistrationForm::successfullySendCodeRegistration()
 {
     ui->emailEdit->setEnabled(true);
     ui->passwordEdit->setEnabled(true);
@@ -127,13 +112,13 @@ void RegistrationForm::successfullyRegistration()
     ui->cancelButtonLabelWidget->hide();
     ui->backButtonLabelWidget->hide();
     ui->stackedWidget->setCurrentIndex(1);
-    ui->labelWidgetText->setText("Регистрация прошла успешно.");
-    setMinimumSize(480,130);
-    setMaximumSize(480,130);
-    ui->registrationLabel->setMinimumWidth(480);
-    ui->registrationLabel->setMaximumWidth(480);
+    ui->confirmationEmailLabel->setText("На почту " + ui->emailEdit->text() +  " был выслан код, введите его в поле ниже:");
+    setMinimumSize(392,186);
+    setMaximumSize(392,186);
+    ui->registrationLabel->setMinimumWidth(392);
+    ui->registrationLabel->setMaximumWidth(392);
 }
-void RegistrationForm::errorRegistration(const QString& error)
+void RegistrationForm::errorSendCodeRegistration(const QString& error)
 {
     if(error == "The user with this email already exists.")
     {
@@ -146,7 +131,7 @@ void RegistrationForm::errorRegistration(const QString& error)
         ui->closeButtonLabelWidget->hide();
         ui->cancelButtonLabelWidget->show();
         ui->backButtonLabelWidget->show();
-        ui->stackedWidget->setCurrentIndex(1);
+        ui->stackedWidget->setCurrentIndex(2);
         ui->labelWidgetText->setText(error);
         setMinimumSize(480,130);
         setMaximumSize(480,130);
@@ -160,6 +145,43 @@ void RegistrationForm::errorRegistration(const QString& error)
     ui->registerButton->setEnabled(true);
     ui->registerButton->setText("Зарегистрироваться");
     ui->registerButton->stopSpinner();
+}
+void RegistrationForm::successfullyCheckCodeRegistration()
+{
+    ui->codeLineEdit->resetStyle();
+    ui->codeLineEdit->setEnabled(true);
+    ui->confirmationButtonEnterCode->setEnabled(true);
+    ui->backButtonEnterCode->setEnabled(true);
+    ui->confirmationButtonEnterCode->stopSpinner();
+    ui->confirmationButtonEnterCode->setText("Подтвердить");
+    ui->stackedWidget->setCurrentIndex(2);
+    ui->labelWidgetText->setText("Регистрация прошла успешно.");
+    setMinimumSize(480,130);
+    setMaximumSize(480,130);
+    ui->registrationLabel->setMinimumWidth(480);
+    ui->registrationLabel->setMaximumWidth(480);
+}
+void RegistrationForm::errorCheckCodeRegistration(const QString& error)
+{
+    if(error == "Incorrect or expired confirmation code.")
+    {
+        ui->codeLineEdit->applyErrorStyleAll();
+    }
+    else
+    {
+        ui->closeButtonLabelWidget->hide();
+        ui->cancelButtonLabelWidget->show();
+        ui->backButtonLabelWidget->show();
+        ui->stackedWidget->setCurrentIndex(2);
+        setMinimumSize(480,130);
+        setMaximumSize(480,130);
+        ui->labelWidgetText->setText(error);
+    }
+    ui->codeLineEdit->setEnabled(true);
+    ui->confirmationButtonEnterCode->setEnabled(true);
+    ui->backButtonEnterCode->setEnabled(true);
+    ui->confirmationButtonEnterCode->stopSpinner();
+    ui->confirmationButtonEnterCode->setText("Подтвердить");
 }
 void RegistrationForm::back()
 {

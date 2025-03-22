@@ -100,13 +100,11 @@ QString KeyChainClass::getHardwareData() const
     QStringList linesBaseBoard = outputBaseBoardSerialNumber.split('\n', Qt::SkipEmptyParts);
     if (linesBaseBoard.size() >= 2) {
         output += linesBaseBoard[1].trimmed();
-        qDebug() << "Base Board Serial Number: " << linesBaseBoard[1].trimmed();
     }
     QString outputDiskSerialNumber = runCommand("wmic", QStringList() << "diskdrive" << "get" << "SerialNumber");
     QStringList linesDisk = outputDiskSerialNumber.split('\n', Qt::SkipEmptyParts);
     if (linesDisk.size() >= 2) {
         output += linesDisk[1].trimmed();
-        qDebug() << "Disk Serial Number: " << linesDisk[1].trimmed();
     }
 #endif
 #ifdef Q_OS_LINUX

@@ -23,43 +23,44 @@ add_subdirectory(qtkeychain/)
 qt_add_resources(QRCS resource/resource.qrc)
 
 set(PROJECT_SOURCES
-        main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
-        edittask.cpp
-        edittask.h
-        edittask.ui
-        settings.cpp
-        settings.h
-        settings.ui
-        taskform.cpp
-        taskform.h
-        taskform.ui
-        config.h
-        binarydatahandler.cpp
-        binarydatahandler.h
-        shadowbutton.cpp
-        shadowbutton.h
-        authorizationform.cpp
-        authorizationform.h
-        authorizationform.ui
-        spinnerbutton.cpp
-        spinnerbutton.h
-        registrationform.cpp
-        registrationform.h
-        registrationform.ui
-        socketclient.cpp
-        socketclient.h
-        keychainclass.cpp
-        keychainclass.h
-        changepasswordform.h
-        changepasswordform.cpp
-        changepasswordform.ui
-        otpinputwidget.h
-        otpinputwidget.cpp
-        passwordvalidator.h
-        passwordvalidator.cpp
+        src/main.cpp
+        src/mainwindow.cpp
+        src/mainwindow.h
+        src/mainwindow.ui
+        src/tasks/edittask.cpp
+        src/tasks/edittask.h
+        src/tasks/edittask.ui
+        src/settings.cpp
+        src/settings.h
+        src/settings.ui
+        src/tasks/taskform.cpp
+        src/tasks/taskform.h
+        src/tasks/taskform.ui
+        src/config.h
+        src/binarydatahandler.cpp
+        src/binarydatahandler.h
+        src/button/shadowbutton.cpp
+        src/button/shadowbutton.h
+        src/network/authorizationform.cpp
+        src/network/authorizationform.h
+        src/network/authorizationform.ui
+        src/button/spinnerbutton.cpp
+        src/button/spinnerbutton.h
+        src/network/registrationform.cpp
+        src/network/registrationform.h
+        src/network/registrationform.ui
+        src/network/socketclient.cpp
+        src/network/socketclient.h
+        src/network/keychainclass.cpp
+        src/network/keychainclass.h
+        src/network/changepasswordform.h
+        src/network/changepasswordform.cpp
+        src/network/changepasswordform.ui
+        src/network/otpinputwidget.h
+        src/network/otpinputwidget.cpp
+        src/network/passwordvalidator.h
+        src/network/passwordvalidator.cpp
+        src/tasks/deletedtaskdata.h
         ${QRCS}
 )
 
@@ -90,12 +91,8 @@ else()
     endif()
 endif()
 
-message(STATUS "QTKeychain include directories: ${QTKEYCHAIN_INCLUDE_DIRS}")
-message(STATUS "QTKeychain include libraries: " ${QTKEYCHAIN_LIBRARIES})
 
-
-target_link_libraries(deadlinelist PRIVATE qt6keychain Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia Qt${QT_VERSION_MAJOR}::Network)
-target_link_directories(deadlinelist PRIVATE ${QTKEYCHAIN_INCLUDE_DIRS})
+target_link_libraries(deadlinelist PRIVATE qt${QT_VERSION_MAJOR}keychain Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia Qt${QT_VERSION_MAJOR}::Network)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

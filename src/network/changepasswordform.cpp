@@ -5,7 +5,7 @@
 ChangePasswordForm::ChangePasswordForm(SocketClient* socket, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::ChangePasswordForm)
-    , mSocket(socket)
+    , m_socket(socket)
 {
     ui->setupUi(this);
     ui->oldPasswordEdit->setEchoMode(QLineEdit::Password);
@@ -27,40 +27,6 @@ ChangePasswordForm::ChangePasswordForm(SocketClient* socket, QWidget *parent)
     connect(ui->backButtonLabelWidget, &QPushButton::clicked, this, &ChangePasswordForm::back);
     connect(socket, &SocketClient::changePasswordSuccessfully, this, &ChangePasswordForm::successfullyChangePassword);
     connect(socket, &SocketClient::changePasswordError, this, &ChangePasswordForm::errorChangePassword);
-}
-bool ChangePasswordForm::checkMinLength(const QString &password) const {
-    return password.length() >= 8;
-}
-
-
-bool ChangePasswordForm::containsUppercase(const QString &password) const {
-    QRegularExpression re("[A-Z]");
-    return re.match(password).hasMatch();
-}
-
-
-bool ChangePasswordForm::containsLowercase(const QString &password) const {
-    QRegularExpression re("[a-z]");
-    return re.match(password).hasMatch();
-}
-
-
-bool ChangePasswordForm::containsDigit(const QString &password) const {
-    QRegularExpression re("[0-9]");
-    return re.match(password).hasMatch();
-}
-
-
-bool ChangePasswordForm::containsSpecialChar(const QString &password) const {
-    // Символ '*' экранируется обратным слэшем.
-    QRegularExpression re("[!@#$%^\\*]");
-    return re.match(password).hasMatch();
-}
-
-
-bool ChangePasswordForm::noSpacesAndCyrillic(const QString &password) const {
-    QRegularExpression re("[а-яА-ЯёЁ]");
-    return !re.match(password).hasMatch() && !password.contains(' ');
 }
 
 void ChangePasswordForm::validatePassword()
@@ -99,7 +65,7 @@ void ChangePasswordForm::changePasswordButtonClick()
     ui->changePasswordButton->setEnabled(false);
     ui->changePasswordButton->setText("");
     ui->changePasswordButton->startSpinner();
-    mSocket->changePasswordUser(ui->oldPasswordEdit->text(), ui->newPasswordEdit->text());
+    m_socket->changePasswordUser(ui->oldPasswordEdit->text(), ui->newPasswordEdit->text());
 }
 void ChangePasswordForm::successfullyChangePassword()
 {

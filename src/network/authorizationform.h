@@ -11,7 +11,7 @@ namespace Ui {
 class AuthorizationForm;
 }
 
-class AuthorizationForm : public QDialog, PasswordValidator
+class AuthorizationForm : public QDialog
 {
     Q_OBJECT
 
@@ -36,6 +36,7 @@ public slots:
     void confirmNewPassword();
     void successfullyConfirmNewPassword();
     void errorConfirmNewPassword(const QString& error);
+    void validatePassword();
 
 private:
     Ui::AuthorizationForm *ui;

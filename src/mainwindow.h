@@ -10,9 +10,10 @@
 #include <QSoundEffect>
 #include <QThread>
 #include <QString>
-#include "taskform.h"
+#include "tasks/taskform.h"
 #include "config.h"
-#include "socketclient.h"
+#include "network/socketclient.h"
+#include "tasks/deletedtaskdata.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -42,15 +43,13 @@ private slots:
     void onAddButtonClicked();
     void onSettingsButtonClicked();
 
-    void onTaskDeleted(TaskForm *task);
+    void onTaskDeleted(TaskForm *task, DeletedTaskData deletedTask);
     void onTaskEdited(TaskForm *task);
     void showAllTasks();
     void showEndingSoonTasks();
     void showMissedDeadlineTasks();
     void showCompletedTasks();
     void updateTaskVisibility();
-
-    void changeDoneTask();
 
     void showUserMenu();
     void showWarning();
@@ -77,9 +76,7 @@ private:
 
     QMenu *userRegisterMenu;
     QMenu *userMenu;
-
-    QThread* socketThread;
-    SocketClient* mSocket;
+    SocketClient* m_socket;
 
 private:
     Config *config;

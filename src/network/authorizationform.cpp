@@ -13,7 +13,14 @@ AuthorizationForm::AuthorizationForm(SocketClient* socket, QWidget *parent)
     ui->confirmResetNewPasswordEdit->setEchoMode(QLineEdit::Password);
     ui->errorEmailOrPassword->hide();
     ui->emailNotFound->hide();
-    ui->errorResetPasswordLabel->hide();
+    ui->errorPassword->hide();
+    ui->minimumLength->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:red }");
+    ui->containCapitalLetter->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:red }");
+    ui->containLowercaseLetter->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:red }");
+    ui->containDigit->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:red }");
+    ui->containSpecialCharacter->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:red }");
+    ui->noSpacesAndCyrillic->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:black }");
+    connect(ui->resetNewPasswordEdit, &QLineEdit::textEdited , this, &AuthorizationForm::validatePassword);
     connect(ui->loginButton, &QPushButton::clicked, this, &AuthorizationForm::loginButtonClick);
     connect(ui->cancelButton, &QPushButton::clicked, this, &QDialog::reject);
     connect(ui->cancelButtonLabelWidget, &QPushButton::clicked, this, &QDialog::reject);
@@ -122,7 +129,7 @@ void AuthorizationForm::successfullySendCodeEmail()
     ui->backForgetPasswordButton->setEnabled(true);
     ui->continueForgetPasswordButton->setText("Продолжить");
     ui->continueForgetPasswordButton->stopSpinner();
-    ui->resetPasswordEmailLabel->setText("На почту " + ui->emailEditForgetPassword->text() +  " был выслан код, введите го в поле ниже:");
+    ui->resetPasswordEmailLabel->setText("На почту " + ui->emailEditForgetPassword->text() +  " был выслан код, введите его в поле ниже:");
     ui->stackedWidget->setCurrentIndex(3);
     setMinimumSize(392,186);
     setMaximumSize(392,186);
@@ -173,8 +180,8 @@ void AuthorizationForm::successfullyContinueEnterCode()
     ui->continueButtonEnterCode->stopSpinner();
     ui->continueButtonEnterCode->setText("Продолжить");
     ui->stackedWidget->setCurrentIndex(4);
-    setMinimumSize(480,160);
-    setMaximumSize(480,160);
+    setMinimumSize(600,329);
+    setMaximumSize(600,329);
 }
 void AuthorizationForm::errorContinueEnterCode(const QString& error)
 {
@@ -200,10 +207,10 @@ void AuthorizationForm::errorContinueEnterCode(const QString& error)
 }
 void AuthorizationForm::confirmNewPassword()
 {
-    ui->codeLineEdit->resetStyle();
-    if(ui->codeLineEdit->code().length() < 6)
+    if(ui->resetNewPasswordEdit->text() != ui->confirmResetNewPasswordEdit->text())
     {
-        ui->codeLineEdit->applyErrorStyle();
+        ui->confirmResetNewPasswordEdit->setStyleSheet("QLineEdit { border: 1px solid red;}");
+        ui->errorPassword->show();
         return;
     }
     ui->confirmResetNewPasswordButton->setEnabled(false);
@@ -244,6 +251,22 @@ void AuthorizationForm::errorConfirmNewPassword(const QString& error)
     ui->backResetNewPasswordButton->setEnabled(true);
     ui->confirmResetNewPasswordButton->stopSpinner();
     ui->confirmResetNewPasswordButton->setText("Подтвердить");
+}
+void AuthorizationForm::validatePassword()
+{
+    const bool& isMinLength = checkMinLength(ui->resetNewPasswordEdit->text());
+    const bool& isContainsUppercase = containsUppercase(ui->resetNewPasswordEdit->text());
+    const bool& isContainsLowercase = containsLowercase(ui->resetNewPasswordEdit->text());
+    const bool& isContainsDigit = containsDigit(ui->resetNewPasswordEdit->text());
+    const bool& isContainsSpecialChar = containsSpecialChar(ui->resetNewPasswordEdit->text());
+    const bool& isNoSpacesAndCyrillic = noSpacesAndCyrillic(ui->resetNewPasswordEdit->text());
+    isMinLength ? ui->minimumLength->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:black }") : ui->minimumLength->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:red }");
+    isContainsUppercase ? ui->containCapitalLetter->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:black }") : ui->containCapitalLetter->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:red }");
+    isContainsLowercase ? ui->containLowercaseLetter->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:black }") : ui->containLowercaseLetter->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:red }");
+    isContainsDigit ? ui->containDigit->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:black }") : ui->containDigit->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:red }");
+    isContainsSpecialChar ? ui->containSpecialCharacter->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:black }") : ui->containSpecialCharacter->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:red }");
+    isNoSpacesAndCyrillic ? ui->noSpacesAndCyrillic->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:black }") : ui->noSpacesAndCyrillic->setStyleSheet("QLabel { font: 10pt \"Sitka\"; color:red }");
+    ui->confirmResetNewPasswordButton->setEnabled(isMinLength && isContainsUppercase && isContainsLowercase && isContainsDigit && isContainsSpecialChar && isNoSpacesAndCyrillic);
 }
 
 AuthorizationForm::~AuthorizationForm()

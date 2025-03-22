@@ -1,9 +1,18 @@
 #include "socketclient.h"
-#include "binarydatahandler.h"
+#include "../binarydatahandler.h"
+#include <QJsonArray>
+#include <QDateTime>
 
-SocketClient::SocketClient(const QString &host, const quint16 port, KeyChainClass* keychain, QObject *parent) : QObject(parent), m_host(host), m_port(port), m_keychain(keychain)
+SocketClient::SocketClient(const QString &host, const quint16 port, KeyChainClass* keychain, QList<TaskForm*>* taskList, QObject *parent) :
+    QObject(parent),
+    m_socket(new QTcpSocket(this)),
+    m_host(host),
+    m_port(port),
+    m_keychain(keychain),
+    m_taskList(taskList),
+    deletedTaskList(new QList<DeletedTaskData>)
 {
-    m_socket = new QTcpSocket(this);
+    loadFromFile("deletedTasks",deletedTaskList);
     connect(m_socket, &QTcpSocket::connected, this, &SocketClient::onConnected);
     connect(m_socket, &QTcpSocket::disconnected, this, &SocketClient::onDisconnected);
     connect(m_socket, &QTcpSocket::readyRead, this, &SocketClient::onReadyRead);
@@ -12,15 +21,188 @@ SocketClient::SocketClient(const QString &host, const quint16 port, KeyChainClas
     m_timer->start(5000);
     reconnect();
 }
+void SocketClient::syncTasksWithServer()
+{
+    if(!m_statusAuthorization || m_token.isEmpty() || m_requestTaskChangeSent) return;
 
-void SocketClient::registerUser(const QString &email, const QString &password)
+    QJsonObject request;
+    request["type"] = "sync_all_tasks";
+    request["session"] = m_token;
+    request["user_id"] = m_userId;
+
+    m_requestQueue.enqueue({
+        request,
+        [this](const QJsonObject& response) {
+            if(response.contains("tasks")) {
+                                    if(m_requestTaskChangeSent) return;
+                                    const QJsonArray& serverTasks = response["tasks"].toArray();
+                                    QMap<QString, TaskForm*> localTasks;
+                                    for(auto* task : *m_taskList) {
+                                        localTasks[task->getTaskId()] = task;
+                                    }
+
+                                    for(const QJsonValue& taskValue : serverTasks) {
+                                        QJsonObject serverTask = taskValue.toObject();
+                                        QString taskId = serverTask["task_id"].toString();
+
+                                        if(localTasks.contains(taskId)) {
+                                            // Разрешение конфликтов
+                                            TaskForm* localTask = localTasks[taskId];
+                                            QDateTime serverChanged = QDateTime::fromString(
+                                                serverTask["changed"].toString(), Qt::ISODate);
+                                            QDateTime localChanged = localTask->getChangedDateTime();
+
+                                            if(serverChanged > localChanged) {
+                                                localTask->setTask(serverTask["task"].toString());
+                                                localTask->setDone(serverTask["done"].toBool());
+                                                localTask->setDeadline(serverTask["date"].toString());
+                                                localTask->setDeadlineDateTime(QDateTime::fromString(serverTask["datetime"].toString(), Qt::ISODate));
+                                                localTask->setChangedDateTime(serverChanged);
+                                                localTask->setSyncStatus(TaskForm::Synced);
+                                            }
+                                        } else {
+                                            TaskForm* newTask = new TaskForm();
+                                            newTask->setTaskId(serverTask["task_id"].toString());
+                                            newTask->setDone(serverTask["done"].toBool());
+                                            newTask->setTask(serverTask["task"].toString());
+                                            newTask->setDeadline(serverTask["date"].toString());
+                                            newTask->setDeadlineDateTime(QDateTime::fromString(serverTask["datetime"].toString(), Qt::ISODate));
+                                            newTask->setChangedDateTime(QDateTime::fromString(serverTask["changed"].toString(), Qt::ISODate));
+                                            newTask->setSyncStatus(TaskForm::Synced);
+                                            m_taskList->append(newTask);
+                                            emit newTaskSynced(newTask);
+                                        }
+                                    }
+                                    QList<QString> serverTaskIds;
+                                    for(const QJsonValue& taskValue : serverTasks) {
+                                        serverTaskIds.append(taskValue.toObject()["task_id"].toString());
+                                    }
+
+                                    for(auto it = localTasks.begin(); it != localTasks.end(); ++it) {
+                                        if(!serverTaskIds.contains(it.key())) {
+                                            it.value()->deleteLater();
+                                            m_taskList->removeAll(it.value());
+                                        }
+                                    }
+                                    overwritingFile("tasks", m_taskList);
+            }
+        }
+    });
+
+    if(!m_isRequestPending) sendNextRequest();
+}
+
+void SocketClient::syncTasks(QList<TaskForm*> tasks) {
+    if(!m_statusAuthorization || m_token.isEmpty()) return;
+        for(auto task : tasks) {
+            switch(task->syncStatus()) {
+            case TaskForm::Modified:
+                sendTaskUpdate(task);
+                break;
+            case TaskForm::Deleted:
+                sendTaskDeletion(task->getTaskId(), task->getChangedDateTime());
+                break;
+            default: break;
+            }
+        }
+}
+
+void SocketClient::sendTaskUpdate(TaskForm* task) {
+    if(m_socket->state() == QAbstractSocket::ConnectedState)
+    {
+    qDebug() << "Отправляю запрос обновления задачи";
+    QJsonObject obj;
+    obj["type"] = "task_update";
+    obj["session"] = m_token;
+    obj["task_id"] = task->getTaskId();
+    obj["task"] = task->getTask();
+    obj["done"] = task->isDone();
+    obj["date"] = task->getDeadline();
+    obj["datetime"] = task->getDeadlineDateTime().toString(Qt::ISODate);
+    obj["changed"] = task->getChangedDateTime().toString(Qt::ISODate);
+    obj["user_id"] = m_userId;
+    m_requestTaskChangeSent = true;
+
+    m_requestQueue.enqueue({
+        obj,
+        [this, task](const QJsonObject& response) {
+            if(response["status"] == "ok") {
+                task->setSyncStatus(TaskForm::Synced);
+                overwritingFile("tasks", m_taskList);
+            } else {
+                qWarning() << "Sync failed for task:" << task->getTaskId();
+            }
+            qDebug() << "Запрос обновления задачи выполнен";
+            m_requestTaskChangeSent = false;
+        }
+    });
+
+    if(!m_isRequestPending) sendNextRequest();
+    }
+}
+
+void SocketClient::sendTaskDeletion(const QString& taskId, const QDateTime& dateTime) {
+    if(m_socket->state() == QAbstractSocket::ConnectedState)
+    {
+    QJsonObject obj;
+    obj["type"] = "task_delete";
+    obj["session"] = m_token;
+    obj["task_id"] = taskId;
+    obj["user_id"] = m_userId;
+    obj["changed"] = dateTime.toString(Qt::ISODate);
+    m_requestTaskChangeSent = true;
+
+    m_requestQueue.enqueue({
+        obj,
+        [this, taskId](const QJsonObject& response) {
+            m_requestTaskChangeSent = false;
+        }
+    });
+
+    if(!m_isRequestPending) sendNextRequest();
+    }
+    else {
+        DeletedTaskData delTask;
+        delTask.taskId = taskId;
+        delTask.timeDeleted = dateTime;
+        deletedTaskList->append(delTask);
+        overwritingFile("deletedTasks",deletedTaskList);
+    }
+}
+void SocketClient::sendCodeRegisterUser(const QString &email)
 {
     if (m_socket->state() == QAbstractSocket::ConnectedState) {
         // Формируем JSON-запрос
         QJsonObject obj;
-        obj["type"] = "registration";
+        obj["type"] = "registration_send_code";
+        obj["email"] = email;
+        QJsonDocument doc(obj);
+        QByteArray data = doc.toJson();
+        m_requestQueue.enqueue({
+            obj,
+            [this](const QJsonObject& response) {
+                if(response["status"] == "ok") {
+                    emit sendCodeRegistrationSuccessfully();
+                } else {
+                    emit sendCodeRegistrationError(response["message"].toString());
+                }
+            }
+        });
+
+        if(!m_isRequestPending) sendNextRequest();
+    } else {
+        emit sendCodeRegistrationError("Ошибка подключения к серверу: \"Socket operation timed out\"");
+    }
+}
+void SocketClient::checkCodeRegisterUser(const QString &email, const QString& password, const QString& code)
+{
+    if (m_socket->state() == QAbstractSocket::ConnectedState) {
+        // Формируем JSON-запрос
+        QJsonObject obj;
+        obj["type"] = "registration_check_code";
         obj["email"] = email;
         obj["password"] = password;
+        obj["code"] = code;
         QJsonDocument doc(obj);
         QByteArray data = doc.toJson();
         m_requestQueue.enqueue({
@@ -29,26 +211,24 @@ void SocketClient::registerUser(const QString &email, const QString &password)
                 m_token = response["session"].toString();
                 m_userId = response["user_id"].toString();
                 if(response["status"] == "ok") {
-                    mStatusAuthorization = true;
+                    m_statusAuthorization = true;
                     m_keychain->writeUserId(m_userId);
                     m_keychain->writeToken(m_token);
-                    emit registrationSuccessfully();
+                    emit checkCodeRegistrationSuccessfully();
                 } else {
                     m_token.clear();
                     m_userId.clear();
-                    mStatusAuthorization = false;
+                    m_statusAuthorization = false;
                     m_keychain->writeUserId(m_userId);
                     m_keychain->writeToken(m_token);
-                    emit registrationError(response["message"].toString());
+                    emit checkCodeRegistrationError(response["message"].toString());
                 }
             }
         });
 
         if(!m_isRequestPending) sendNextRequest();
-        qDebug() << "Запрос регистрации отправлен:" << data;
     } else {
-        qDebug() << "Нет соединения с сервером. Регистрация не может быть выполнена.";
-        emit registrationError("Ошибка подключения к серверу: \"Socket operation timed out\"");
+        emit sendCodeRegistrationError("Ошибка подключения к серверу: \"Socket operation timed out\"");
     }
 }
 void SocketClient::sendCodeEmailResetPassword(const QString &email)
@@ -73,9 +253,7 @@ void SocketClient::sendCodeEmailResetPassword(const QString &email)
         });
 
         if(!m_isRequestPending) sendNextRequest();
-        qDebug() << "Запрос регистрации отправлен:" << data;
     } else {
-        qDebug() << "Нет соединения с сервером. Код для сброса пароля не может быть отправлен.";
         emit sendCodeEmailResetPasswordError("Ошибка подключения к серверу: \"Socket operation timed out\"");
     }
 }
@@ -100,9 +278,7 @@ void SocketClient::checkCodeEmailResetPassword(const QString &code)
         });
 
         if(!m_isRequestPending) sendNextRequest();
-        qDebug() << "Запрос регистрации отправлен:" << data;
     } else {
-        qDebug() << "Нет соединения с сервером. Код для сброса пароля не может быть отправлен.";
         emit checkCodeEmailResetPasswordError("Ошибка подключения к серверу: \"Socket operation timed out\"");
     }
 }
@@ -113,22 +289,23 @@ void SocketClient::confirmResetNewPassword(const QString& password)
         QJsonObject obj;
         obj["type"] = "reset_password_new";
         obj["new_password"] = password;
+        obj["user_id"] = m_userId;
         QJsonDocument doc(obj);
         QByteArray data = doc.toJson();
         m_requestQueue.enqueue({
             obj,
             [this](const QJsonObject& response) {
                 m_token = response["session"].toString();
-                m_userId = response["user_id"].toString();
                 if(response["status"] == "ok") {
-                    mStatusAuthorization = true;
+                    m_statusAuthorization = true;
                     m_keychain->writeUserId(m_userId);
                     m_keychain->writeToken(m_token);
+                    syncTasks(*m_taskList);
                     emit confirmResetNewPasswordSuccessfully();
                 } else {
                     m_token.clear();
                     m_userId.clear();
-                    mStatusAuthorization = false;
+                    m_statusAuthorization = false;
                     m_keychain->writeUserId(m_userId);
                     m_keychain->writeToken(m_token);
                     emit confirmResetNewPasswordError(response["message"].toString());
@@ -137,9 +314,7 @@ void SocketClient::confirmResetNewPassword(const QString& password)
         });
 
         if(!m_isRequestPending) sendNextRequest();
-        qDebug() << "Запрос регистрации отправлен:" << data;
     } else {
-        qDebug() << "Нет соединения с сервером. Код для сброса пароля не может быть отправлен.";
         emit confirmResetNewPasswordError("Ошибка подключения к серверу: \"Socket operation timed out\"");
     }
 }
@@ -159,14 +334,15 @@ void SocketClient::authorizationUser(const QString &email, const QString &passwo
                 m_token = response["session"].toString();
                 m_userId = response["user_id"].toString();
                 if(response["status"] == "ok") {
-                    mStatusAuthorization = true;
+                    m_statusAuthorization = true;
                     m_keychain->writeUserId(m_userId);
                     m_keychain->writeToken(m_token);
+                    syncTasks(*m_taskList);
                     emit authorizationSuccessfully();
                 } else {
                     m_token.clear();
                     m_userId.clear();
-                    mStatusAuthorization = false;
+                    m_statusAuthorization = false;
                     m_keychain->writeUserId(m_userId);
                     m_keychain->writeToken(m_token);
                     emit authorizationError(response["message"].toString());
@@ -175,9 +351,7 @@ void SocketClient::authorizationUser(const QString &email, const QString &passwo
         });
 
         if(!m_isRequestPending) sendNextRequest();
-        qDebug() << "Запрос регистрации отправлен:" << data;
     } else {
-        qDebug() << "Нет соединения с сервером. Регистрация не может быть выполнена.";
         emit authorizationError("Ошибка подключения к серверу: \"Socket operation timed out\"");
     }
 }
@@ -200,16 +374,13 @@ void SocketClient::changePasswordUser(const QString &oldPassword, const QString 
                 if(response["status"] == "ok") {
                     emit changePasswordSuccessfully();
             } else {
-                    qDebug() << "Не удалось изменить пароль";
                     emit changePasswordError(response["message"].toString());
             }
             }
         });
 
         if(!m_isRequestPending) sendNextRequest();
-        qDebug() << "Запрос удаления сессии отправлен:" << data;
     } else {
-        qDebug() << "Нет соединения с сервером. Регистрация не может быть выполнена.";
         emit changePasswordError("Ошибка подключения к серверу: \"Socket operation timed out\"");
     }
 }
@@ -229,33 +400,28 @@ void SocketClient::exitUser()
                     m_userId.clear();
                     m_keychain->writeUserId(m_userId);
                     m_keychain->writeToken(m_token);
-                    mStatusAuthorization = false;
+                    m_statusAuthorization = false;
                     emit exitSuccessfully();
                 } else {
-                    qDebug() << "Не удалось удалить сессию";
                     emit exitError(response["message"].toString());
                 }
             }
         });
 
         if(!m_isRequestPending) sendNextRequest();
-        qDebug() << "Запрос удаления сессии отправлен:" << data;
-    } else {
-        qDebug() << "Нет соединения с сервером. Регистрация не может быть выполнена.";
     }
 }
 
 void SocketClient::checkConnection()
 {
     if (m_socket->state() != QAbstractSocket::ConnectedState) {
-        qDebug() << "Соединение потеряно. Пытаемся переподключиться...";
         reconnect();
     } else {
-        if(mStatusAuthorization && !m_token.isEmpty())
+        if(m_statusAuthorization && !m_token.isEmpty())
         {
+            qDebug() << m_requestTaskChangeSent;
             QJsonObject request;
             request["type"] = "check_session";
-            qDebug() << m_token;
             request["session"] = m_token;
 
             QJsonDocument doc(request);
@@ -267,8 +433,8 @@ void SocketClient::checkConnection()
                     m_token = response["session"].toString();
                     m_userId = response["user_id"].toString();
                     if(response["status"] == "ok") {
-                        qDebug() << "mUserId: " << m_userId;
-                        mStatusAuthorization = true;
+                        m_statusAuthorization = true;
+                        syncTasksWithServer();
                         m_keychain->writeToken(m_token);
                         emit validSession();
                     } else {
@@ -276,7 +442,7 @@ void SocketClient::checkConnection()
                         m_userId.clear();
                         m_keychain->writeUserId(m_userId);
                         m_keychain->writeToken(m_token);
-                        mStatusAuthorization = false;
+                        m_statusAuthorization = false;
                         emit invalidSession();
                     }
                 }
@@ -284,7 +450,6 @@ void SocketClient::checkConnection()
 
             if(!m_isRequestPending) sendNextRequest();
         }
-        qDebug() << "Соединение активно.";
     }
 }
 void SocketClient::sendNextRequest() {
@@ -295,16 +460,13 @@ void SocketClient::sendNextRequest() {
 
     QJsonDocument doc(request.data);
     m_socket->write(doc.toJson());
-    qDebug() << "Запрос отправлен:" << doc.toJson();
 }
 void SocketClient::onConnected()
 {
-    qDebug() << "Успешно подключились к серверу.";
     if(!m_token.isEmpty())
     {
         QJsonObject request;
         request["type"] = "check_session";
-        qDebug() << m_token;
         request["session"] = m_token;
 
         QJsonDocument doc(request);
@@ -316,16 +478,31 @@ void SocketClient::onConnected()
                 m_token = response["session"].toString();
                 m_userId = response["user_id"].toString();
                 if(response["status"] == "ok") {
-                    qDebug() << "mUserId: " << m_userId;
-                    mStatusAuthorization = true;
+                    m_statusAuthorization = true;
                     m_keychain->writeToken(m_token);
+                    loadFromFile("deletedTasks", deletedTaskList);
+                    if(!deletedTaskList->isEmpty())
+                    {
+                        for(const auto& delTask : *deletedTaskList) {
+                            sendTaskDeletion(delTask.taskId, delTask.timeDeleted);
+                        }
+                        deletedTaskList->clear();
+                        deleteFile("deletedTasks");
+                    }
+
+                    // Синхронизация измененных задач
+                    if(!m_taskList->isEmpty()) {
+                        syncTasks(*m_taskList);
+                    }
                     emit validSession();
                 } else {
                     m_token.clear();
                     m_userId.clear();
                     m_keychain->writeUserId(m_userId);
                     m_keychain->writeToken(m_token);
-                    mStatusAuthorization = false;
+                    m_statusAuthorization = false;
+                    deletedTaskList->clear();
+                    deleteFile("deletedTasks");
                     emit invalidSession();
                 }
             }
@@ -338,14 +515,14 @@ void SocketClient::onConnected()
 
 void SocketClient::onDisconnected()
 {
-    qDebug() << "Соединение с сервером разорвано.";
+    m_requestTaskChangeSent = false;
+    m_isRequestPending = false;
     emit disconnected();
 }
 
 void SocketClient::onError(QAbstractSocket::SocketError socketError)
 {
     Q_UNUSED(socketError)
-    qDebug() << "Ошибка сокета:" << m_socket->errorString();
 }
 void SocketClient::onReadyRead()
 {
@@ -372,25 +549,22 @@ void SocketClient::onReadyRead()
                 continue;
             }
 
-            m_isRequestPending = false;
-            qDebug() << "doc " << doc.object();
-
             if(!m_requestQueue.isEmpty()) {
                 auto nextRequest = m_requestQueue.dequeue();
                 if(nextRequest.handler) nextRequest.handler(doc.object());
-                else qDebug() << "not handler";
+                m_isRequestPending = false;
                 sendNextRequest();
             }
             else
             {
-                qDebug() << "очередь реквеста пустая";
+                m_isRequestPending = false;
             }
         }
     }
 }
 bool SocketClient::getStatusAuthorization()
 {
-    return mStatusAuthorization;
+    return m_statusAuthorization;
 }
 bool SocketClient::getConnected()
 {

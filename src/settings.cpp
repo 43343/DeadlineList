@@ -10,7 +10,7 @@
 
 Settings::Settings(Config *config,QWidget *parent)
     : QDialog(parent)
-    , currentConfig(config)
+    , m_config(config)
     , ui(new Ui::Settings)
 {
     ui->setupUi(this);
@@ -38,11 +38,11 @@ void Settings::onLaunchByDefaultCheckBox()
 
 void Settings::save()
 {
-    currentConfig->enableTextNotifications = ui->enableTextNotificationsCheckBox->isChecked();
-    currentConfig->enableSoundNotifications = ui->enableSoundNotificationsCheckBox->isChecked();
-    currentConfig->launchByDefault = ui->launchByDefaultCheckbox->isChecked();
-    currentConfig->launchingTray = ui->launchingTrayCheckBox->isChecked();
-    overwritingFile("config", currentConfig);
+    m_config->enableTextNotifications = ui->enableTextNotificationsCheckBox->isChecked();
+    m_config->enableSoundNotifications = ui->enableSoundNotificationsCheckBox->isChecked();
+    m_config->launchByDefault = ui->launchByDefaultCheckbox->isChecked();
+    m_config->launchingTray = ui->launchingTrayCheckBox->isChecked();
+    overwritingFile("config", m_config);
 #ifdef Q_OS_WIN
     QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
                        QSettings::NativeFormat);

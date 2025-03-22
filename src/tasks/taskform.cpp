@@ -14,7 +14,9 @@ TaskForm::TaskForm(QWidget *parent)
     connect(ui->edit, &QPushButton::clicked, this, &TaskForm::editTaskForm);
     connect(ui->remove, &QPushButton::clicked, this, &TaskForm::removeTaskForm);
     connect(ui->done, &QCheckBox::clicked, this, [this] () {
-        emit changeDoneTask();
+        m_changedDateTime = QDateTime::currentDateTime();
+        setSyncStatus(TaskForm::Modified);
+        emit taskEdited(this);
     });
 }
 
@@ -34,7 +36,7 @@ bool TaskForm::isDone() const
 }
 QDateTime TaskForm::getDeadlineDateTime() const
 {
-    return deadlineDateTime;
+    return m_deadlineDateTime;
 }
 QString TaskForm::getTask() const
 {
@@ -46,18 +48,22 @@ QString TaskForm::getDeadline() const
 }
 void TaskForm::setDone(const bool& done)
 {
+    setSyncStatus(TaskForm::Modified);
     ui->done->setChecked(done);
 }
 void TaskForm::setDeadlineDateTime(const QDateTime& deadline)
 {
-    deadlineDateTime = deadline;
+    setSyncStatus(TaskForm::Modified);
+    m_deadlineDateTime = deadline;
 }
 void TaskForm::setTask(const QString& task)
 {
+    setSyncStatus(TaskForm::Modified);
     ui->task->setText(task);
 }
 void TaskForm::setDeadline(const QString& deadline)
 {
+    setSyncStatus(TaskForm::Modified);
     ui->deadline->setText(deadline);
 }
 
@@ -67,11 +73,11 @@ void TaskForm::editTaskForm()
     QString task = getTask();
     QString dateTime = getDeadline();
     editTask.setTask(task);
-    editTask.setDeadlineTime(deadlineDateTime);
+    editTask.setDeadlineTime(m_deadlineDateTime);
     switch (editTask.exec()) {
     case QDialog::Accepted:
         qDebug() << "Accepted";
-        this->setParameters(editTask.getTask(), editTask.getDeadlineTime(), editTask.getDeadlineDateTime());
+        this->setParameters(editTask.getTask(), editTask.getDeadlineTime(), editTask.getDeadlineDateTime(), QDateTime::currentDateTime(), m_taskId);
         emit taskEdited(this);
         break;
     case QDialog::Rejected:
@@ -80,6 +86,16 @@ void TaskForm::editTaskForm()
     default:
         qDebug() << "Unexpected";
     }
+}
+void TaskForm::setSyncStatus(SyncStatus status) {
+    if(m_syncStatus != status) {
+        m_syncStatus = status;
+        m_changedDateTime = QDateTime::currentDateTime();
+    }
+}
+TaskForm::SyncStatus TaskForm::syncStatus() const {
+
+    return  m_syncStatus;
 }
 
 
@@ -102,16 +118,41 @@ void TaskForm::removeTaskForm()
 
     connect(animationGroup, &QParallelAnimationGroup::finished, this, [this]()
             {
-                emit taskDeleted(this);
+                setSyncStatus(TaskForm::Deleted);
+                DeletedTaskData deletedTask;
+                deletedTask.taskId = m_taskId;
+                deletedTask.timeDeleted = QDateTime::currentDateTime();
+                emit taskDeleted(this, deletedTask);
                 this->deleteLater();
             });
 
     animationGroup->start(QAbstractAnimation::DeleteWhenStopped);
 }
+void TaskForm::setChangedDateTime(const QDateTime& changedDateTime)
+{
+    m_changedDateTime = changedDateTime;
+    setSyncStatus(TaskForm::Modified);
+}
+QDateTime TaskForm::getChangedDateTime() const
+{
+    return m_changedDateTime;
+}
 
-void TaskForm::setParameters(const QString &taskEdit, const QString &dateTimeEdit, const QDateTime &dateTime)
+QString TaskForm::getTaskId() const
+{
+    return m_taskId;
+}
+void TaskForm::setTaskId(const QString &taskId)
+{
+    m_taskId = taskId;
+}
+
+void TaskForm::setParameters(const QString &taskEdit, const QString &dateTimeEdit, const QDateTime &dateTime,  const QDateTime &changedDateTime, const QString &taskId)
 {
     ui->task->setText(taskEdit);
     ui->deadline->setText(dateTimeEdit);
-    deadlineDateTime = dateTime;
+    m_deadlineDateTime = dateTime;
+    m_changedDateTime = changedDateTime;
+    m_taskId = taskId;
+    setSyncStatus(TaskForm::Modified);
 }
