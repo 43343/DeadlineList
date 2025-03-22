@@ -1,6 +1,9 @@
 #include "cryptdata.h"
 #include <QProcess>
 #include <QDebug>
+#ifdef Q_OS_LINUX
+#include <QFile>
+#endif
 
 CryptData::CryptData() {}
 
@@ -34,7 +37,6 @@ QString CryptData::decryptQString(const QString &encryptedText) const {
     // Преобразуем результат обратно в QString с использованием кодировки UTF-8
     return QString::fromUtf8(result);
 }
-#ifdef Q_OS_WIN
 QString CryptData::runCommand(const QString &command, const QStringList &arguments) const
 {
     QProcess process;
@@ -46,7 +48,6 @@ QString CryptData::runCommand(const QString &command, const QStringList &argumen
     QString output = process.readAllStandardOutput();
     return output;
 }
-#endif
 QString CryptData::getHardwareData() const
 {
     QString output = "";
@@ -72,7 +73,7 @@ QString CryptData::getHardwareData() const
     }
     QString outputDiskSerialNumber = runCommand("udevadm", QStringList() << "info" << "--query=all" << "--name=/dev/sda");
     // В выводе ищем строку, содержащую "ID_SERIAL="
-    QStringList lines = outputDiskSerialNumber.split('\n', QString::SkipEmptyParts);
+    QStringList lines = outputDiskSerialNumber.split('\n', Qt::SkipEmptyParts);
     for (const QString &line : lines) {
         if (line.contains("ID_SERIAL=")) {
             int pos = line.indexOf("ID_SERIAL=");
