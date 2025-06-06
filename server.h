@@ -9,6 +9,7 @@
 #include <QSqlError>
 #include <QDebug>
 #include "cryptdata.h"
+#include <QCache>
 
 class Server : public QTcpServer
 {
@@ -40,6 +41,10 @@ private:
     bool authorizationUser(const QString &email, const QString &password, int &userId);
     bool changePassword(const QString &token, const QString &userId, const QString& oldPassword, const QString& newPassword);
     QString generateCode();
+
+    QCache<QString, QJsonDocument> tasksCache;
+
+    static const int CACHE_EXPIRY = 300000;
 private:
     QString createSession(int userId);
     bool checkSessionInDatabase(const QString& token);

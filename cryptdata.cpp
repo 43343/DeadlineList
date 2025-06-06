@@ -5,12 +5,15 @@
 #include <QFile>
 #endif
 
-CryptData::CryptData() {}
+CryptData::CryptData()
+{
+    m_hardwareData = getHardwareData();
+}
 
 QString CryptData::encryptQString(const QString &text) const{
     // Преобразуем исходную строку в UTF-8 байты
     QByteArray data = text.toUtf8();
-    QByteArray keyData = getHardwareData().toUtf8();
+    QByteArray keyData = m_hardwareData.toUtf8();
     QByteArray result;
 
     // Выполняем XOR для каждого байта данных с соответствующим байтом ключа
@@ -25,7 +28,7 @@ QString CryptData::encryptQString(const QString &text) const{
 QString CryptData::decryptQString(const QString &encryptedText) const {
     // Декодируем Base64 в исходный зашифрованный байтовый массив
     QByteArray encryptedData = QByteArray::fromBase64(encryptedText.toUtf8());
-    QByteArray keyData = getHardwareData().toUtf8();
+    QByteArray keyData = m_hardwareData.toUtf8();
     QByteArray result;
 
     // Выполняем XOR для восстановления исходных байт

@@ -1,10 +1,12 @@
 #include "server.h"
 #include <QRandomGenerator>
 #include <QJsonArray>
+#include <QSqlRecord>
 #include "smtpclient.h"
 #include "smtpcredentials.h"
 
-Server::Server()
+Server::Server() :
+    tasksCache(100)
 {
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("users.db");
@@ -114,32 +116,53 @@ void Server::processRequest(QTcpSocket *socket)
         checkSession(obj, socket);
     }
 }
-void Server::syncAllTasks(QJsonObject &obj, QTcpSocket *socket)
-{
-    qDebug() << "Получен запрос синхронизации задач";
+void Server::syncAllTasks(QJsonObject &obj, QTcpSocket *socket) {
     QString userId = cryptData.encryptQString(obj["user_id"].toString());
-    QJsonObject response;
+
+    // Проверяем кэш
+    if (tasksCache.contains(userId)) {
+        qDebug() << "Возвращаем данные из кэша для пользователя" << userId;
+        QJsonObject response;
+        response["tasks"] = tasksCache.object(userId)->array();
+        sendResponse(socket, response);
+        return;
+    }
+
     QJsonArray tasks;
 
+    // Используем forward-only режим для более быстрого чтения
     QSqlQuery query;
-    query.prepare("SELECT * FROM tasks WHERE user_id = :user_id");
+    query.setForwardOnly(true);
+    query.prepare("SELECT id, done, task, date, datetime, changed FROM tasks WHERE user_id = :user_id");
     query.bindValue(":user_id", userId.toInt());
 
     if(query.exec()) {
+        // Предварительно получаем индексы столбцов
+        const int idCol = query.record().indexOf("id");
+        const int doneCol = query.record().indexOf("done");
+        const int taskCol = query.record().indexOf("task");
+        const int dateCol = query.record().indexOf("date");
+        const int datetimeCol = query.record().indexOf("datetime");
+        const int changedCol = query.record().indexOf("changed");
+
         while(query.next()) {
             QJsonObject task;
-            task["task_id"] = query.value("id").toString();
-            task["done"] = query.value("done").toBool();
-            task["task"] = cryptData.decryptQString(query.value("task").toString());
-            task["date"] = cryptData.decryptQString(query.value("date").toString());
-            task["datetime"] = cryptData.decryptQString(query.value("datetime").toString());
-            task["changed"] = cryptData.decryptQString(query.value("changed").toString());
+            task["task_id"] = query.value(idCol).toString();
+            task["done"] = query.value(doneCol).toBool();
+            task["task"] = cryptData.decryptQString(query.value(taskCol).toString());
+            task["date"] = cryptData.decryptQString(query.value(dateCol).toString());
+            task["datetime"] = cryptData.decryptQString(query.value(datetimeCol).toString());
+            task["changed"] = cryptData.decryptQString(query.value(changedCol).toString());
             tasks.append(task);
         }
     }
 
+    // Сохраняем в кэш как QJsonDocument
+    QJsonDocument *cachedDoc = new QJsonDocument(tasks);
+    tasksCache.insert(userId, cachedDoc, CACHE_EXPIRY);
+
+    QJsonObject response;
     response["tasks"] = tasks;
-    QJsonDocument replyDoc(response);
     sendResponse(socket, response);
 }
 void Server::taskUpdate(QJsonObject &obj, QTcpSocket *socket)
@@ -550,19 +573,7 @@ void Server::checkSession(QJsonObject &obj, QTcpSocket *socket)
         response["status"] = "error";
         response["message"] = "The session is invalid.";
     }
-
     sendResponse(socket, response);
-}
-QString Server::generateCode()
-{
-    const QString symbols = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const int codeLength = 6;
-    QString code;
-    for (int i = 0; i < codeLength; ++i) {
-        int index = QRandomGenerator::global()->bounded(symbols.length());
-        code.append(symbols.at(index));
-    }
-    return code;
 }
 bool Server::checkSessionInDatabase(const QString& token)
 {
@@ -590,6 +601,17 @@ bool Server::checkSessionInDatabase(const QString& token)
         qDebug() << "Запись с токеном не найдена: " << token;
         return false;
     }
+}
+QString Server::generateCode()
+{
+    const QString symbols = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const int codeLength = 6;
+    QString code;
+    for (int i = 0; i < codeLength; ++i) {
+        int index = QRandomGenerator::global()->bounded(symbols.length());
+        code.append(symbols.at(index));
+    }
+    return code;
 }
 bool Server::resetPassword(const QString &userId, const QString &newPassword)
 {

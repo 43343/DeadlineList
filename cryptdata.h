@@ -11,6 +11,7 @@ public:
 private:
     QString runCommand(const QString &command, const QStringList &arguments) const;
     QString getHardwareData() const;
+    QString m_hardwareData;
 };
 
 #endif // CRYPTDATA_H
