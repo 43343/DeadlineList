@@ -12,13 +12,10 @@ void loadSmtpCredentials(QString &email, QString &password)
     while (!in.atEnd()) {
         QString line = in.readLine().trimmed();
 
-        // Если строка начинается с "Email="
         if (line.startsWith("Email=", Qt::CaseInsensitive)) {
-            // Разбиваем строку по символу '=' и берем вторую часть
             email = line.section('=', 1).trimmed();
         }
 
-        // Если строка начинается с "Password="
         if (line.startsWith("Password=", Qt::CaseInsensitive)) {
             password = line.section('=', 1).trimmed();
         }

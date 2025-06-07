@@ -14,7 +14,6 @@ Server::Server() :
         qDebug() << "Ошибка открытия базы данных:" << db.lastError().text();
     } else {
         QSqlQuery query;
-        // Создаем таблицу, если она не существует
         if (!query.exec("CREATE TABLE IF NOT EXISTS users ("
                         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                         "email TEXT UNIQUE, "
@@ -119,7 +118,6 @@ void Server::processRequest(QTcpSocket *socket)
 void Server::syncAllTasks(QJsonObject &obj, QTcpSocket *socket) {
     QString userId = cryptData.encryptQString(obj["user_id"].toString());
 
-    // Проверяем кэш
     if (tasksCache.contains(userId)) {
         qDebug() << "Возвращаем данные из кэша для пользователя" << userId;
         QJsonObject response;
@@ -129,15 +127,12 @@ void Server::syncAllTasks(QJsonObject &obj, QTcpSocket *socket) {
     }
 
     QJsonArray tasks;
-
-    // Используем forward-only режим для более быстрого чтения
     QSqlQuery query;
     query.setForwardOnly(true);
     query.prepare("SELECT id, done, task, date, datetime, changed FROM tasks WHERE user_id = :user_id");
     query.bindValue(":user_id", userId.toInt());
 
     if(query.exec()) {
-        // Предварительно получаем индексы столбцов
         const int idCol = query.record().indexOf("id");
         const int doneCol = query.record().indexOf("done");
         const int taskCol = query.record().indexOf("task");
@@ -528,12 +523,9 @@ void Server::authorization(QJsonObject &obj, QTcpSocket *socket)
 }
 void Server::checkSession(QJsonObject &obj, QTcpSocket *socket)
 {
-    // Получаем переданный токен
     QString token = cryptData.encryptQString(obj["session"].toString());
 
-    // Здесь добавьте логику проверки валидности токена.
-    // Например, выполнить запрос к базе данных и проверить срок действия сессии.
-    bool isValid = checkSessionInDatabase(token); // пример функции проверки.
+    bool isValid = checkSessionInDatabase(token);
 
     QJsonObject response;
     response["type"] = "check_session_reply";
@@ -585,7 +577,6 @@ bool Server::checkSessionInDatabase(const QString& token)
         return false;
     }
 
-    // Если запись найдена, проверяем время истечения.
     if (query.next()) {
         QDateTime authoriazationExpiresAt = QDateTime::fromString(cryptData.decryptQString(query.value("authorization_expires_at").toString()), Qt::ISODate);
         QDateTime now = QDateTime::currentDateTime();
@@ -597,7 +588,6 @@ bool Server::checkSessionInDatabase(const QString& token)
             return false;
         }
     } else {
-        // Запись с таким токеном не найдена.
         qDebug() << "Запись с токеном не найдена: " << token;
         return false;
     }
@@ -617,7 +607,7 @@ bool Server::resetPassword(const QString &userId, const QString &newPassword)
 {
     QSqlQuery query;
 
-    // 1. Обновление пароля в базе данных.
+    // Обновление пароля в базе данных.
     QString encryptedNewPassword = cryptData.encryptQString(newPassword);
     query.prepare("UPDATE users SET password = :newPassword WHERE id = :id");
     query.bindValue(":newPassword", encryptedNewPassword);
@@ -628,7 +618,6 @@ bool Server::resetPassword(const QString &userId, const QString &newPassword)
         return false;
     }
 
-    // 2. Удаление всех сессий пользователя.
     QSqlQuery sessionQuery;
     sessionQuery.prepare("DELETE FROM sessions WHERE user_id = :user_id");
     sessionQuery.bindValue(":user_id", userId);
@@ -644,7 +633,6 @@ bool Server::changePassword(const QString &token, const QString &userId,const QS
 {
     QSqlQuery query;
 
-    // 1. Проверка: существует ли пользователь с данным userId и совпадает ли старый пароль
     query.prepare("SELECT password FROM users WHERE id = :id");
     query.bindValue(":id", userId);
 
@@ -664,8 +652,6 @@ bool Server::changePassword(const QString &token, const QString &userId,const QS
         return false;
     }
 
-    // 2. Обновление пароля в базе данных.
-    // Можно зашифровать новый пароль, если это необходимо.
     QString encryptedNewPassword = cryptData.encryptQString(newPassword);
     query.prepare("UPDATE users SET password = :newPassword WHERE id = :id");
     query.bindValue(":newPassword", encryptedNewPassword);
@@ -676,7 +662,6 @@ bool Server::changePassword(const QString &token, const QString &userId,const QS
         return false;
     }
 
-    // 3. Удаление всех сессий пользователя, кроме текущей (с переданным token).
     QSqlQuery sessionQuery;
     sessionQuery.prepare("DELETE FROM sessions "
                          "WHERE user_id = :user_id AND session_token != :current_token");
@@ -733,7 +718,6 @@ bool Server::findUserByEmail(const QString &email, QString &userId)
     return false;
 }
 
-// Регистрация нового пользователя
 bool Server::registerNewUser(const QString &email, const QString &password, int &userId)
 {
     QSqlQuery query;
@@ -758,7 +742,6 @@ bool Server::authorizationUser(const QString &email, const QString &password, in
         return false;
     }
 
-    // Если пользователь с заданным email не найден – авторизация неуспешна
     if (!query.next()) {
         return false;
     }
@@ -779,7 +762,6 @@ QString Server::createSession(int userId)
     const QDateTime expiresAt = QDateTime::currentDateTime().addMonths(1);
 
     for (int attempt = 0; attempt < maxAttempts; ++attempt) {
-        // Генерация нового токена
         QString sessionToken = cryptData.encryptQString(QUuid::createUuid().toString());
 
         QSqlQuery query;
@@ -791,17 +773,14 @@ QString Server::createSession(int userId)
         query.bindValue(":authorization_expires_at", cryptData.encryptQString(expiresAt.toString(Qt::ISODate)));
 
         if (query.exec()) {
-            // Если токен успешно вставлен, возвращаем его
             qDebug() << "Сессия успешно создана";
             return sessionToken;
         } else {
             QSqlError err = query.lastError();
-            // Если ошибка связана с дублированием (нарушение уникальности), повторяем попытку
             if (err.text().contains("UNIQUE", Qt::CaseInsensitive)) {
                 qDebug() << "Дублирование токена" << cryptData.decryptQString(sessionToken) << ", попытка:" << attempt + 1;
                 continue;
             }
-            // Если ошибка другая, выводим сообщение об ошибке и выходим
             qDebug() << "Ошибка создания сессии:" << err.text();
             return "";
         }

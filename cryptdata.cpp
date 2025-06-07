@@ -11,33 +11,27 @@ CryptData::CryptData()
 }
 
 QString CryptData::encryptQString(const QString &text) const{
-    // Преобразуем исходную строку в UTF-8 байты
     QByteArray data = text.toUtf8();
     QByteArray keyData = m_hardwareData.toUtf8();
     QByteArray result;
 
-    // Выполняем XOR для каждого байта данных с соответствующим байтом ключа
     for (int i = 0; i < data.size(); ++i) {
         char encryptedChar = data.at(i) ^ keyData.at(i % keyData.size());
         result.append(encryptedChar);
     }
 
-    // Кодируем результат в Base64 – это позволит передавать его в виде строки
     return QString::fromUtf8(result.toBase64());
 }
 QString CryptData::decryptQString(const QString &encryptedText) const {
-    // Декодируем Base64 в исходный зашифрованный байтовый массив
     QByteArray encryptedData = QByteArray::fromBase64(encryptedText.toUtf8());
     QByteArray keyData = m_hardwareData.toUtf8();
     QByteArray result;
 
-    // Выполняем XOR для восстановления исходных байт
     for (int i = 0; i < encryptedData.size(); ++i) {
         char decryptedChar = encryptedData.at(i) ^ keyData.at(i % keyData.size());
         result.append(decryptedChar);
     }
 
-    // Преобразуем результат обратно в QString с использованием кодировки UTF-8
     return QString::fromUtf8(result);
 }
 QString CryptData::runCommand(const QString &command, const QStringList &arguments) const
