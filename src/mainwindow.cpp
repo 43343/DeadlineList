@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
-
 #include <QAction>
 #include <QIcon>
 #include <QPropertyAnimation>
@@ -14,10 +13,10 @@
 #include "tasks/edittask.h"
 #include "settings.h"
 #include "binarydatahandler.h"
-#include "network/keychainclass.h"
 #include "network/authorizationform.h"
 #include "network/registrationform.h"
 #include "network/changepasswordform.h"
+#include "network/securestorage.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -104,25 +103,12 @@ MainWindow::MainWindow(QWidget *parent)
     updateTimer->start(2000);
 
     trayIcon->show();
+    SecureStorage* secureStorage = new SecureStorage("deadlinelist", this);
 
-    KeyChainClass* keychain = new KeyChainClass(this);
-    m_socket = new SocketClient("192.168.0.217", 1234, keychain, taskList, this);
-    connect(keychain, &KeyChainClass::tokenRestored, this, [&, this](const QString& m_token)
-            {
-                m_socket->setToken(m_token);
-                qDebug() << m_token << "mToken";
-            });
-    connect(keychain, &KeyChainClass::userIdRestored, this, [&, this](const QString& m_userId)
-            {
-                m_socket->setUserId(m_userId);
-                qDebug() << m_userId << "mUserId";
-            });
-    connect(keychain, &KeyChainClass::error, this, [&, this](const QString &errorText)
-            {
-        qDebug() << errorText;
-            });
-    keychain->readToken();
-    keychain->readUserId();
+    m_socket = new SocketClient("192.168.0.217", secureStorage, 1234, taskList, this);
+    qDebug() << QString::fromUtf8(secureStorage->load("user"));
+    m_socket->setUserId(secureStorage->load("user"));
+    m_socket->setToken(secureStorage->load("token"));
     connect(m_socket, &SocketClient::connected, this, &MainWindow::hideButtonWarning);
     connect(m_socket, &SocketClient::disconnected, this, &MainWindow::showButtonWarning);
     connect(m_socket, &SocketClient::validSession, this, &MainWindow::hideButtonWarning);

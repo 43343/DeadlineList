@@ -18,7 +18,6 @@ QString fullFilePath(const QString &fileName)
 #endif
     QDir dir(baseFolder);
     if (!dir.exists()) {
-        // Если папки не существует, пробуем её создать
         if (!dir.mkpath(baseFolder)) {
             qWarning() << "Не удалось создать каталог:" << baseFolder;
         }
@@ -36,7 +35,6 @@ bool overwritingFile(const QString &fileName, const Config* config)
     if (config == nullptr)
         return false;
 
-    // Формируем полный путь к файлу и сохраняем его в члене класса
     QString m_filePath = fullFilePath(fileName);
 
     QFile file(m_filePath);
@@ -47,7 +45,6 @@ bool overwritingFile(const QString &fileName, const Config* config)
 
     QDataStream out(&file);
 
-    // Запись данных. Порядок записи должен совпадать с порядком чтения.
     out << config->enableTextNotifications;
     out << config->enableSoundNotifications;
     out << config->launchByDefault;
@@ -82,7 +79,6 @@ bool loadFromFile(const QString &fileName, Config* config)
 bool overwritingFile(const QString &fileName, const QList<DeletedTaskData>* taskList)
 {
 
-    // Формируем полный путь к файлу и сохраняем его в члене класса
     QString m_filePath = fullFilePath(fileName);
 
     QFile file(m_filePath);
@@ -95,7 +91,6 @@ bool overwritingFile(const QString &fileName, const QList<DeletedTaskData>* task
 
     out.setVersion(QDataStream::Qt_5_9);
 
-    // Записываем количество задач
     out << static_cast<qint32>(taskList->size());
 
     for (const DeletedTaskData task : *taskList) {
@@ -142,7 +137,6 @@ bool loadFromFile(const QString &fileName, QList<DeletedTaskData>* taskList)
 bool overwritingFile(const QString &fileName, const QList<TaskForm*>* taskList)
 {
 
-    // Формируем полный путь к файлу и сохраняем его в члене класса
     QString m_filePath = fullFilePath(fileName);
 
     QFile file(m_filePath);
@@ -155,7 +149,6 @@ bool overwritingFile(const QString &fileName, const QList<TaskForm*>* taskList)
 
     out.setVersion(QDataStream::Qt_5_9);
 
-    // Записываем количество задач
     out << static_cast<qint32>(taskList->size());
 
     for (const TaskForm* task : *taskList) {

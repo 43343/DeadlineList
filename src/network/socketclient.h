@@ -7,15 +7,15 @@
 #include <QJsonObject>
 #include <QList>
 #include <QQueue>
-#include "keychainclass.h"
 #include "../tasks/deletedtaskdata.h"
 #include "../tasks/taskform.h"
+#include "securestorage.h"
 
 class SocketClient : public QObject
 {
     Q_OBJECT
 public:
-    SocketClient(const QString &host, const quint16 port, KeyChainClass* keychain, QList<TaskForm*>* taskList, QObject *parent = nullptr);
+    SocketClient(const QString &host, SecureStorage* secureStorage, const quint16 port, QList<TaskForm*>* taskList, QObject *parent = nullptr);
     void sendCodeRegisterUser(const QString &email);
     void checkCodeRegisterUser(const QString &email, const QString &password, const QString& code);
     void authorizationUser(const QString &email, const QString &password);
@@ -67,13 +67,13 @@ private:
     quint16 m_port;
     QString m_token;
     QString m_userId;
-    KeyChainClass* m_keychain;
     bool m_requestTaskChangeSent = false;
     bool m_statusAuthorization = false;
     QList<DeletedTaskData>* deletedTaskList;
     void sendTaskUpdate(TaskForm* task);
     void sendTaskDeletion(const QString& taskId, const QDateTime& dateTime);
     QList<TaskForm*>* m_taskList;
+    SecureStorage* m_secureStorage;
 private:
     struct Request {
         QJsonObject data;

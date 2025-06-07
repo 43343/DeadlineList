@@ -18,7 +18,11 @@ endif()
 
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Gui Widgets Multimedia Network)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets Multimedia Network)
-add_subdirectory(qtkeychain/)
+if(WIN32)
+    set(OPENSSL_ROOT_DIR "C:\\Program Files\\OpenSSL-Win64")
+    set(OPENSSL_USE_STATIC_LIBS TRUE)
+endif()
+find_package(OpenSSL REQUIRED)
 
 qt_add_resources(QRCS resource/resource.qrc)
 
@@ -46,13 +50,13 @@ set(PROJECT_SOURCES
         src/network/authorizationform.ui
         src/button/spinnerbutton.cpp
         src/button/spinnerbutton.h
+        src/network/securestorage.h
+        src/network/securestorage.cpp
         src/network/registrationform.cpp
         src/network/registrationform.h
         src/network/registrationform.ui
         src/network/socketclient.cpp
         src/network/socketclient.h
-        src/network/keychainclass.cpp
-        src/network/keychainclass.h
         src/network/changepasswordform.h
         src/network/changepasswordform.cpp
         src/network/changepasswordform.ui
@@ -91,8 +95,7 @@ else()
     endif()
 endif()
 
-
-target_link_libraries(deadlinelist PRIVATE qt${QT_VERSION_MAJOR}keychain Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia Qt${QT_VERSION_MAJOR}::Network)
+target_link_libraries(deadlinelist PRIVATE OpenSSL::SSL OpenSSL::Crypto OpenSSL::applink Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia Qt${QT_VERSION_MAJOR}::Network)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

@@ -3,14 +3,14 @@
 #include <QJsonArray>
 #include <QDateTime>
 
-SocketClient::SocketClient(const QString &host, const quint16 port, KeyChainClass* keychain, QList<TaskForm*>* taskList, QObject *parent) :
+SocketClient::SocketClient(const QString &host, SecureStorage* secureStorage, const quint16 port, QList<TaskForm*>* taskList, QObject *parent) :
     QObject(parent),
     m_socket(new QTcpSocket(this)),
     m_host(host),
     m_port(port),
-    m_keychain(keychain),
     m_taskList(taskList),
-    deletedTaskList(new QList<DeletedTaskData>)
+    deletedTaskList(new QList<DeletedTaskData>),
+    m_secureStorage(secureStorage)
 {
     loadFromFile("deletedTasks",deletedTaskList);
     connect(m_socket, &QTcpSocket::connected, this, &SocketClient::onConnected);
@@ -172,7 +172,6 @@ void SocketClient::sendTaskDeletion(const QString& taskId, const QDateTime& date
 void SocketClient::sendCodeRegisterUser(const QString &email)
 {
     if (m_socket->state() == QAbstractSocket::ConnectedState) {
-        // Формируем JSON-запрос
         QJsonObject obj;
         obj["type"] = "registration_send_code";
         obj["email"] = email;
@@ -197,7 +196,6 @@ void SocketClient::sendCodeRegisterUser(const QString &email)
 void SocketClient::checkCodeRegisterUser(const QString &email, const QString& password, const QString& code)
 {
     if (m_socket->state() == QAbstractSocket::ConnectedState) {
-        // Формируем JSON-запрос
         QJsonObject obj;
         obj["type"] = "registration_check_code";
         obj["email"] = email;
@@ -212,15 +210,14 @@ void SocketClient::checkCodeRegisterUser(const QString &email, const QString& pa
                 m_userId = response["user_id"].toString();
                 if(response["status"] == "ok") {
                     m_statusAuthorization = true;
-                    m_keychain->writeUserId(m_userId);
-                    m_keychain->writeToken(m_token);
+                    m_secureStorage->store("token", m_token.toUtf8());
+                    m_secureStorage->store("user", m_userId.toUtf8());
                     emit checkCodeRegistrationSuccessfully();
                 } else {
                     m_token.clear();
                     m_userId.clear();
+                    m_secureStorage->clear();
                     m_statusAuthorization = false;
-                    m_keychain->writeUserId(m_userId);
-                    m_keychain->writeToken(m_token);
                     emit checkCodeRegistrationError(response["message"].toString());
                 }
             }
@@ -234,7 +231,6 @@ void SocketClient::checkCodeRegisterUser(const QString &email, const QString& pa
 void SocketClient::sendCodeEmailResetPassword(const QString &email)
 {
     if (m_socket->state() == QAbstractSocket::ConnectedState) {
-        // Формируем JSON-запрос
         QJsonObject obj;
         obj["type"] = "reset_password_send_code";
         obj["email"] = email;
@@ -260,7 +256,6 @@ void SocketClient::sendCodeEmailResetPassword(const QString &email)
 void SocketClient::checkCodeEmailResetPassword(const QString &code)
 {
     if (m_socket->state() == QAbstractSocket::ConnectedState) {
-        // Формируем JSON-запрос
         QJsonObject obj;
         obj["type"] = "reset_password_check_code";
         obj["code"] = code;
@@ -285,7 +280,6 @@ void SocketClient::checkCodeEmailResetPassword(const QString &code)
 void SocketClient::confirmResetNewPassword(const QString& password)
 {
     if (m_socket->state() == QAbstractSocket::ConnectedState) {
-        // Формируем JSON-запрос
         QJsonObject obj;
         obj["type"] = "reset_password_new";
         obj["new_password"] = password;
@@ -298,16 +292,15 @@ void SocketClient::confirmResetNewPassword(const QString& password)
                 m_token = response["session"].toString();
                 if(response["status"] == "ok") {
                     m_statusAuthorization = true;
-                    m_keychain->writeUserId(m_userId);
-                    m_keychain->writeToken(m_token);
+                    m_secureStorage->store("token", m_token.toUtf8());
+                    m_secureStorage->store("user", m_userId.toUtf8());
                     syncTasks(*m_taskList);
                     emit confirmResetNewPasswordSuccessfully();
                 } else {
                     m_token.clear();
                     m_userId.clear();
+                    m_secureStorage->clear();
                     m_statusAuthorization = false;
-                    m_keychain->writeUserId(m_userId);
-                    m_keychain->writeToken(m_token);
                     emit confirmResetNewPasswordError(response["message"].toString());
                 }
             }
@@ -321,7 +314,6 @@ void SocketClient::confirmResetNewPassword(const QString& password)
 void SocketClient::authorizationUser(const QString &email, const QString &password)
 {
     if (m_socket->state() == QAbstractSocket::ConnectedState) {
-        // Формируем JSON-запрос
         QJsonObject obj;
         obj["type"] = "authorization";
         obj["email"] = email;
@@ -335,16 +327,15 @@ void SocketClient::authorizationUser(const QString &email, const QString &passwo
                 m_userId = response["user_id"].toString();
                 if(response["status"] == "ok") {
                     m_statusAuthorization = true;
-                    m_keychain->writeUserId(m_userId);
-                    m_keychain->writeToken(m_token);
+                    m_secureStorage->store("token", m_token.toUtf8());
+                    m_secureStorage->store("user", m_userId.toUtf8());
                     syncTasks(*m_taskList);
                     emit authorizationSuccessfully();
                 } else {
                     m_token.clear();
                     m_userId.clear();
+                    m_secureStorage->clear();
                     m_statusAuthorization = false;
-                    m_keychain->writeUserId(m_userId);
-                    m_keychain->writeToken(m_token);
                     emit authorizationError(response["message"].toString());
                 }
             }
@@ -398,8 +389,7 @@ void SocketClient::exitUser()
                 if(response["status"] == "ok") {
                     m_token.clear();
                     m_userId.clear();
-                    m_keychain->writeUserId(m_userId);
-                    m_keychain->writeToken(m_token);
+                    m_secureStorage->clear();
                     m_statusAuthorization = false;
                     emit exitSuccessfully();
                 } else {
@@ -434,14 +424,14 @@ void SocketClient::checkConnection()
                     m_userId = response["user_id"].toString();
                     if(response["status"] == "ok") {
                         m_statusAuthorization = true;
+                        m_secureStorage->store("token", m_token.toUtf8());
+                        m_secureStorage->store("user", m_userId.toUtf8());
                         syncTasksWithServer();
-                        m_keychain->writeToken(m_token);
                         emit validSession();
                     } else {
                         m_token.clear();
                         m_userId.clear();
-                        m_keychain->writeUserId(m_userId);
-                        m_keychain->writeToken(m_token);
+                        m_secureStorage->clear();
                         m_statusAuthorization = false;
                         emit invalidSession();
                     }
@@ -479,7 +469,8 @@ void SocketClient::onConnected()
                 m_userId = response["user_id"].toString();
                 if(response["status"] == "ok") {
                     m_statusAuthorization = true;
-                    m_keychain->writeToken(m_token);
+                    m_secureStorage->store("token", m_token.toUtf8());
+                    m_secureStorage->store("user", m_userId.toUtf8());
                     loadFromFile("deletedTasks", deletedTaskList);
                     if(!deletedTaskList->isEmpty())
                     {
@@ -498,8 +489,7 @@ void SocketClient::onConnected()
                 } else {
                     m_token.clear();
                     m_userId.clear();
-                    m_keychain->writeUserId(m_userId);
-                    m_keychain->writeToken(m_token);
+                    m_secureStorage->clear();
                     m_statusAuthorization = false;
                     deletedTaskList->clear();
                     deleteFile("deletedTasks");
