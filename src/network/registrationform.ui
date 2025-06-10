@@ -40,7 +40,7 @@
 }</string>
    </property>
    <property name="text">
-    <string>РЕГИСТРАЦИЯ</string>
+    <string>REGISTRATION</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -84,7 +84,7 @@
           <string notr="true"/>
          </property>
          <property name="text">
-          <string>* Минимальная длина — 8 символов</string>
+          <string>* The minimum length is 8 characters</string>
          </property>
         </widget>
        </item>
@@ -94,7 +94,7 @@
           <string notr="true"/>
          </property>
          <property name="text">
-          <string>* Должен содержать хотя бы одну заглавную букву (A-Z)</string>
+          <string>* Must contain at least one capital letter (A-Z)</string>
          </property>
         </widget>
        </item>
@@ -104,7 +104,7 @@
           <string notr="true"/>
          </property>
          <property name="text">
-          <string>* Должен содержать хотя бы одну строчную букву (a-z)</string>
+          <string>* Must contain at least one lowercase letter (a-z)</string>
          </property>
         </widget>
        </item>
@@ -114,7 +114,7 @@
           <string notr="true"/>
          </property>
          <property name="text">
-          <string>* Должен содержать хотя бы одну цифру (0-9)</string>
+          <string>* Must contain at least one digit (0-9)</string>
          </property>
         </widget>
        </item>
@@ -124,7 +124,7 @@
           <string notr="true"/>
          </property>
          <property name="text">
-          <string>* Должен содержать хотя бы один специальный символ (например, !@#$%^*)</string>
+          <string>* Must contain at least one special character (for example, !@#$%^*)</string>
          </property>
         </widget>
        </item>
@@ -134,7 +134,7 @@
           <string notr="true"/>
          </property>
          <property name="text">
-          <string>* Не должен содержать пробелы или кириллицу</string>
+          <string>* It must not contain spaces or Cyrillic characters</string>
          </property>
         </widget>
        </item>
@@ -155,7 +155,7 @@
 }</string>
       </property>
       <property name="text">
-       <string>Требования к паролю:</string>
+       <string>Password Requirements:</string>
       </property>
      </widget>
      <widget class="QPushButton" name="cancelButton">
@@ -168,7 +168,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>Отмена</string>
+       <string>Cancel</string>
       </property>
      </widget>
      <widget class="SpinnerButton" name="registerButton">
@@ -184,15 +184,15 @@
        </rect>
       </property>
       <property name="text">
-       <string>Зарегистрироваться</string>
+       <string>Register</string>
       </property>
      </widget>
      <widget class="QWidget" name="verticalLayoutWidget_4">
       <property name="geometry">
        <rect>
-        <x>70</x>
+        <x>60</x>
         <y>200</y>
-        <width>421</width>
+        <width>492</width>
         <height>131</height>
        </rect>
       </property>
@@ -200,17 +200,29 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <property name="spacing">
-          <number>41</number>
+          <number>63</number>
          </property>
          <item>
           <widget class="QLabel" name="label_8">
+           <property name="minimumSize">
+            <size>
+             <width>134</width>
+             <height>37</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>134</width>
+             <height>37</height>
+            </size>
+           </property>
            <property name="styleSheet">
             <string notr="true">QLabel {
 	font: 10pt &quot;Sitka&quot;;
 }</string>
            </property>
            <property name="text">
-            <string>ПОЧТА/EMAIL</string>
+            <string>MAIL</string>
            </property>
           </widget>
          </item>
@@ -223,8 +235,14 @@
             <widget class="QLineEdit" name="emailEdit">
              <property name="minimumSize">
               <size>
-               <width>0</width>
-               <height>20</height>
+               <width>289</width>
+               <height>22</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>289</width>
+               <height>22</height>
               </size>
              </property>
              <property name="styleSheet">
@@ -236,13 +254,13 @@
             <widget class="QLabel" name="errorEmail">
              <property name="minimumSize">
               <size>
-               <width>0</width>
-               <height>2</height>
+               <width>289</width>
+               <height>10</height>
               </size>
              </property>
              <property name="maximumSize">
               <size>
-               <width>16777215</width>
+               <width>289</width>
                <height>10</height>
               </size>
              </property>
@@ -254,7 +272,10 @@
 }</string>
              </property>
              <property name="text">
-              <string>                                                                             *Почта введена некорректно</string>
+              <string>*The email was entered incorrectly</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
             </widget>
            </item>
@@ -265,35 +286,81 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_5">
          <property name="spacing">
-          <number>82</number>
+          <number>63</number>
          </property>
          <item>
           <widget class="QLabel" name="label_9">
+           <property name="minimumSize">
+            <size>
+             <width>134</width>
+             <height>37</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>134</width>
+             <height>37</height>
+            </size>
+           </property>
            <property name="styleSheet">
             <string notr="true">QLabel {
 	font: 10pt &quot;Sitka&quot;;
 }</string>
            </property>
            <property name="text">
-            <string>ПАРОЛЬ</string>
+            <string>PASSWORD</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="passwordEdit">
-           <property name="styleSheet">
-            <string notr="true"/>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <property name="spacing">
+            <number>0</number>
            </property>
-          </widget>
+           <item>
+            <widget class="QLineEdit" name="passwordEdit">
+             <property name="minimumSize">
+              <size>
+               <width>289</width>
+               <height>22</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>289</width>
+               <height>22</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
         </layout>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <property name="spacing">
+          <number>63</number>
+         </property>
          <item>
           <widget class="QLabel" name="label_10">
+           <property name="minimumSize">
+            <size>
+             <width>134</width>
+             <height>37</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>134</width>
+             <height>37</height>
+            </size>
+           </property>
            <property name="text">
-            <string>ПОДТВЕРДИТЕ ПАРОЛЬ</string>
+            <string>CONFIRM PASSWORD</string>
            </property>
           </widget>
          </item>
@@ -303,19 +370,32 @@
             <number>0</number>
            </property>
            <item>
-            <widget class="QLineEdit" name="confirmPasswordEdit"/>
+            <widget class="QLineEdit" name="confirmPasswordEdit">
+             <property name="minimumSize">
+              <size>
+               <width>289</width>
+               <height>22</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>289</width>
+               <height>22</height>
+              </size>
+             </property>
+            </widget>
            </item>
            <item>
             <widget class="QLabel" name="errorPassword">
              <property name="minimumSize">
               <size>
-               <width>0</width>
-               <height>2</height>
+               <width>289</width>
+               <height>10</height>
               </size>
              </property>
              <property name="maximumSize">
               <size>
-               <width>16777215</width>
+               <width>289</width>
                <height>10</height>
               </size>
              </property>
@@ -327,7 +407,10 @@
 }</string>
              </property>
              <property name="text">
-              <string>                                                                                          *Пароли не совпадают</string>
+              <string>*Passwords don't match</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
             </widget>
            </item>
@@ -395,8 +478,20 @@
         <height>24</height>
        </rect>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
       <property name="text">
-       <string>Назад</string>
+       <string>Back</string>
       </property>
      </widget>
      <widget class="SpinnerButton" name="confirmationButtonEnterCode">
@@ -404,12 +499,24 @@
        <rect>
         <x>224</x>
         <y>160</y>
-        <width>81</width>
+        <width>75</width>
         <height>24</height>
        </rect>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
       <property name="text">
-       <string>Подтвердить</string>
+       <string>Confirm</string>
       </property>
      </widget>
     </widget>
@@ -443,7 +550,7 @@
 }</string>
       </property>
       <property name="text">
-       <string>Ошибка подключения к серверу: &quot;Socket operation timed out&quot;</string>
+       <string>Server connection error: &quot;Socket operation timed out&quot;</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -461,8 +568,20 @@
         <height>24</height>
        </rect>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
       <property name="text">
-       <string>Назад</string>
+       <string>Back</string>
       </property>
      </widget>
      <widget class="QPushButton" name="cancelButtonLabelWidget">
@@ -474,8 +593,20 @@
         <height>24</height>
        </rect>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
       <property name="text">
-       <string>Отмена</string>
+       <string>Cancel</string>
       </property>
      </widget>
      <widget class="QPushButton" name="closeButtonLabelWidget">
@@ -487,8 +618,20 @@
         <height>24</height>
        </rect>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
       <property name="text">
-       <string>Закрыть</string>
+       <string>Close</string>
       </property>
      </widget>
     </widget>

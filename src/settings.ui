@@ -36,11 +36,29 @@
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <item>
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>LANGUAGE</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="languagesComboBox">
+        <property name="editable">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>ВКЛЮЧИТЬ ТЕКСТОВЫЕ УВЕДОМЛЕНИЯ</string>
+         <string>ENABLE TEXT NOTIFICATIONS</string>
         </property>
        </widget>
       </item>
@@ -73,7 +91,7 @@
       <item>
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>ВКЛЮЧИТЬ ЗВУКОВЫЕ УВЕДОМЛЕНИЯ</string>
+         <string>ENABLE SOUND NOTIFICATIONS</string>
         </property>
        </widget>
       </item>
@@ -106,7 +124,7 @@
       <item>
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>ЗАПУСК ПО УМОЛЧАНИЮ</string>
+         <string>DEFAULT LAUNCH</string>
         </property>
        </widget>
       </item>
@@ -139,7 +157,7 @@
          <bool>false</bool>
         </property>
         <property name="text">
-         <string>ЗАПУСК В ТРЕЕ</string>
+         <string>LAUNCHING IN THE TRAY</string>
         </property>
        </widget>
       </item>
@@ -182,7 +200,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Сохранить</string>
+    <string>Save</string>
    </property>
   </widget>
   <widget class="QPushButton" name="cancelButton">
@@ -195,7 +213,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Отмена</string>
+    <string>Cancel</string>
    </property>
   </widget>
  </widget>

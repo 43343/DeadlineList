@@ -78,6 +78,15 @@ private:
     QMenu *userMenu;
     SocketClient* m_socket;
 
+    QAction *openAction;
+    QAction *quitAction;
+
+    QAction *loginUserMenu;
+    QAction *registrationUserMenu;
+
+    QAction *changePasswordUserMenu;
+    QAction *exitUserMenu;
+
 private:
     Config *config;
 

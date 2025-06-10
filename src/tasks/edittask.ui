@@ -54,8 +54,20 @@
       </property>
       <item>
        <widget class="QLabel" name="taskEdit">
+        <property name="minimumSize">
+         <size>
+          <width>50</width>
+          <height>38</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>38</height>
+         </size>
+        </property>
         <property name="text">
-         <string>ЗАДАЧА:</string>
+         <string>TASK:</string>
         </property>
        </widget>
       </item>
@@ -96,13 +108,13 @@
           </property>
           <property name="minimumSize">
            <size>
-            <width>0</width>
+            <width>220</width>
             <height>10</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>16777215</width>
+            <width>220</width>
             <height>10</height>
            </size>
           </property>
@@ -114,7 +126,10 @@
 }</string>
           </property>
           <property name="text">
-           <string>                                       *Это поле не должно быть пустым</string>
+           <string>*This field cannot be left blank</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -141,8 +156,20 @@
       </property>
       <item>
        <widget class="QLabel" name="deadlineEdit">
+        <property name="minimumSize">
+         <size>
+          <width>80</width>
+          <height>41</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>80</width>
+          <height>41</height>
+         </size>
+        </property>
         <property name="text">
-         <string>ДЕДЛАЙН:</string>
+         <string>DEADLINE:</string>
         </property>
        </widget>
       </item>
@@ -178,8 +205,20 @@
      <height>24</height>
     </rect>
    </property>
+   <property name="minimumSize">
+    <size>
+     <width>75</width>
+     <height>24</height>
+    </size>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>75</width>
+     <height>24</height>
+    </size>
+   </property>
    <property name="text">
-    <string>Изменить</string>
+    <string>Change</string>
    </property>
   </widget>
   <widget class="QPushButton" name="cancelButton">
@@ -191,8 +230,20 @@
      <height>24</height>
     </rect>
    </property>
+   <property name="minimumSize">
+    <size>
+     <width>75</width>
+     <height>24</height>
+    </size>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>75</width>
+     <height>24</height>
+    </size>
+   </property>
    <property name="text">
-    <string>Отмена</string>
+    <string>Cancel</string>
    </property>
   </widget>
  </widget>

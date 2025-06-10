@@ -10,6 +10,7 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QUuid>
+#include <QTranslator>
 #include "tasks/edittask.h"
 #include "settings.h"
 #include "binarydatahandler.h"
@@ -30,8 +31,39 @@ MainWindow::MainWindow(QWidget *parent)
     , taskList(new QList<TaskForm*>)
     , config(new Config())
 {
-    ui->setupUi(this);
     loadFromFile("config", config);
+    QTranslator *translator = new QTranslator();
+    QString translationFile;
+    if(config->language == "ru")
+    {
+        translationFile = "translations/deadlinelist_ru.qm";
+    }
+    else
+    {
+        config->language = "en";
+        translationFile = "translations/deadlinelist_en.qm";
+    }
+    if (!translator->load(translationFile)) {
+        qWarning() << "Failed to load translation file:" << translationFile;
+
+        // Дополнительная диагностика
+        if (!QFile::exists(translationFile)) {
+            qDebug() << "File does not exist in resources";
+        } else {
+            qDebug() << "File exists but could not be loaded";
+            QFile file(translationFile);
+            if (file.open(QIODevice::ReadOnly)) {
+                qDebug() << "File size:" << file.size() << "bytes";
+                file.close();
+            }
+        }
+
+        delete translator;
+        return;
+    }
+
+    qApp->installTranslator(translator);
+    ui->setupUi(this);
     QStringList args = QCoreApplication::arguments();
     if (!(args.contains("--autostart") && config->launchingTray)) {
         this->show();
@@ -59,8 +91,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     trayIcon->setIcon(QIcon(":/icons/icons/iconApp.ico"));
 
-    QAction *openAction = new QAction("Открыть", this);
-    QAction *quitAction = new QAction("Выйти", this);
+    openAction = new QAction(tr("Open"), this);
+    quitAction = new QAction(tr("Exit"), this);
 
     connect(openAction, &QAction::triggered, this, &MainWindow::showWindow);
     connect(quitAction, &QAction::triggered, this, &MainWindow::quitApplication);
@@ -70,8 +102,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     trayIcon->setContextMenu(trayMenu);
 
-    QAction *loginUserMenu = new QAction("Войти", userRegisterMenu);
-    QAction *registrationUserMenu = new QAction("Зарегистрироваться", userRegisterMenu);
+    loginUserMenu = new QAction(tr("Log in"), userRegisterMenu);
+    registrationUserMenu = new QAction(tr("Register"), userRegisterMenu);
     connect(loginUserMenu, &QAction::triggered, this, &MainWindow::onLogin);
     connect(registrationUserMenu, &QAction::triggered, this, &MainWindow::onRegistration);
     userRegisterMenu->addAction(loginUserMenu);
@@ -79,8 +111,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->userButton, &QPushButton::clicked, this, &MainWindow::showUserMenu);
     connect(ui->warningButton, &QPushButton::clicked, this, &MainWindow::showWarning);
 
-    QAction *changePasswordUserMenu = new QAction("Сменить пароль", userRegisterMenu);
-    QAction *exitUserMenu = new QAction("Выйти", userRegisterMenu);
+    changePasswordUserMenu = new QAction(tr("Change password"), userRegisterMenu);
+    exitUserMenu = new QAction(tr("Log out"), userRegisterMenu);
     connect(changePasswordUserMenu, &QAction::triggered, this, &MainWindow::onChangePassword);
     connect(exitUserMenu, &QAction::triggered, this, &MainWindow::onExit);
     userMenu->addAction(changePasswordUserMenu);
@@ -133,8 +165,8 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     this->hide();
 
     trayIcon->showMessage(
-        "Приложение свернуто",
-        "Приложение было свернуто в трей. Нажмите на иконку, чтобы открыть.",
+        tr("The application is minimized"),
+        tr("The app has been minimized to the tray. Click on the icon to open it."),
         QSystemTrayIcon::Information,
         2000
         );
@@ -195,17 +227,17 @@ void MainWindow::onChangePassword()
 void MainWindow::showWarning()
 {
     if(!m_socket->getConnected())
-        QMessageBox::warning(nullptr, "Хьюстен, у нас проблема",
-                         "Нет соединения с сервером.");
+        QMessageBox::warning(nullptr, tr("Houston, we have a problem"),
+                             tr("There is no connection to the server."));
     else if(!m_socket->getStatusAuthorization())
-        QMessageBox::warning(nullptr, "Хьюстен, у нас возможности",
-                             "Авторизуйся в аккаунте чтобы сохранять таски между устройствами.");
+        QMessageBox::warning(nullptr, tr("Houston, we have opportunities"),
+                             tr("Log in to your account to save tasks between devices."));
 }
 void MainWindow::onAddButtonClicked()
 {
     EditTask addTask(this);
     addTask.setWindowTitle("Add task");
-    addTask.setButtonAcceptText("Добавить");
+    addTask.setButtonAcceptText(tr("Add"));
     TaskForm *newTask = new TaskForm(ui->scrollAreaWidgetContents);
     QDateTime currentTime = QDateTime::currentDateTime();
     //QVBoxLayout *layout = qobject_cast<QVBoxLayout*>(ui->scrollAreaWidgetContents->layout());
@@ -258,7 +290,6 @@ void MainWindow::onTaskDeleted(TaskForm *task, DeletedTaskData deletedTask) {
     m_socket->syncTasks({task});
 }
 void MainWindow::onTaskEdited(TaskForm *task) {
-    qDebug() << "я здесь";
     QDateTime currentTime = QDateTime::currentDateTime();
     QDateTime deadline = task->getDeadlineDateTime();
     if(notifiedEndingSoon.contains(task) && currentTime < deadline && currentTime.secsTo(deadline) > 3600)
@@ -364,7 +395,7 @@ void MainWindow::updateTaskVisibility()
                 if (!notifiedEndingSoon.contains(task)) {
                     if(config->enableTextNotifications)
                     {
-                        trayIcon->showMessage("Уведомление", "Дедлайн выполнения задачи подходит к концу \nЗадача: " + task->getTask() + "\nДедлайн: " + task->getDeadline(), QSystemTrayIcon::Information);
+                        trayIcon->showMessage(tr("Notification"), tr("The deadline for completing the task is coming to an end!\nThe task: ") + task->getTask() + tr("\nDeadline: ") + task->getDeadline(), QSystemTrayIcon::Information);
                     }
                     if(config->enableSoundNotifications)
                     {
@@ -380,7 +411,7 @@ void MainWindow::updateTaskVisibility()
                 if (!notifiedMissedDeadline.contains(task)) {
                     if(config->enableTextNotifications)
                     {
-                        trayIcon->showMessage("Уведомление", "Задача пропустила дедлайн!\n Задача: " + task->getTask() + "\n Дедлайн: " + task->getDeadline(), QSystemTrayIcon::Information);
+                        trayIcon->showMessage(tr("Notification"), tr("The task missed the deadline!\nThe task: ") + task->getTask() + tr("\nDeadline: ") + task->getDeadline(), QSystemTrayIcon::Information);
                     }
                     if(config->enableSoundNotifications)
                     {
@@ -430,6 +461,17 @@ void MainWindow::onSettingsButtonClicked()
     Settings settings(config, this);
 
     settings.exec();
+
+    ui->retranslateUi(this);
+
+    openAction->setText(tr("Open"));
+    quitAction->setText(tr("Exit"));
+
+    loginUserMenu->setText(tr("Log in"));
+    registrationUserMenu->setText(tr("Register"));
+
+    changePasswordUserMenu->setText(tr("Change password"));
+    exitUserMenu->setText(tr("Log out"));
 }
 
 void MainWindow::quitApplication() {

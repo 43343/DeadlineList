@@ -74,7 +74,7 @@
 }</string>
       </property>
       <property name="text">
-       <string>АВТОРИЗАЦИЯ</string>
+       <string>AUTHORIZATION</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -85,8 +85,8 @@
        <rect>
         <x>20</x>
         <y>70</y>
-        <width>361</width>
-        <height>81</height>
+        <width>371</width>
+        <height>82</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
@@ -94,13 +94,25 @@
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
           <widget class="QLabel" name="label_2">
+           <property name="minimumSize">
+            <size>
+             <width>99</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>99</width>
+             <height>35</height>
+            </size>
+           </property>
            <property name="styleSheet">
             <string notr="true">QLabel {
 	font: 10pt &quot;Sitka&quot;;
 }</string>
            </property>
            <property name="text">
-            <string>ПОЧТА/EMAIL</string>
+            <string>MAIL</string>
            </property>
           </widget>
          </item>
@@ -111,6 +123,18 @@
            </property>
            <item>
             <widget class="QLineEdit" name="emailEdit">
+             <property name="minimumSize">
+              <size>
+               <width>250</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>250</width>
+               <height>20</height>
+              </size>
+             </property>
              <property name="styleSheet">
               <string notr="true">QLineEdit { font: 10pt &quot;Sitka&quot;;}</string>
              </property>
@@ -120,13 +144,13 @@
             <widget class="QLabel" name="errorEmailOrPassword">
              <property name="minimumSize">
               <size>
-               <width>0</width>
-               <height>2</height>
+               <width>250</width>
+               <height>10</height>
               </size>
              </property>
              <property name="maximumSize">
               <size>
-               <width>16777215</width>
+               <width>250</width>
                <height>10</height>
               </size>
              </property>
@@ -138,7 +162,10 @@
 }</string>
              </property>
              <property name="text">
-              <string>                                        *Неправильно введена почта или пароль</string>
+              <string>*The email address or password was entered incorrectly</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
             </widget>
            </item>
@@ -149,22 +176,51 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <property name="spacing">
-          <number>47</number>
+          <number>6</number>
          </property>
          <item>
           <widget class="QLabel" name="label_3">
+           <property name="minimumSize">
+            <size>
+             <width>99</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>99</width>
+             <height>35</height>
+            </size>
+           </property>
            <property name="styleSheet">
             <string notr="true">QLabel {
 	font: 10pt &quot;Sitka&quot;;
 }</string>
            </property>
            <property name="text">
-            <string>ПАРОЛЬ</string>
+            <string>PASSWORD</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="passwordEdit"/>
+          <layout class="QVBoxLayout" name="verticalLayout_4">
+           <item>
+            <widget class="QLineEdit" name="passwordEdit">
+             <property name="minimumSize">
+              <size>
+               <width>250</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>250</width>
+               <height>20</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
         </layout>
        </item>
@@ -179,6 +235,18 @@
         <height>16</height>
        </rect>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>111</width>
+        <height>16</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>111</width>
+        <height>16</height>
+       </size>
+      </property>
       <property name="styleSheet">
        <string notr="true">QLabel
 {
@@ -186,7 +254,7 @@
 }</string>
       </property>
       <property name="text">
-       <string>Забыли пароль?</string>
+       <string>Forgot password?</string>
       </property>
      </widget>
      <widget class="QPushButton" name="forgetPasswordButton">
@@ -197,6 +265,18 @@
         <width>121</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>121</width>
+        <height>20</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>121</width>
+        <height>20</height>
+       </size>
       </property>
       <property name="styleSheet">
        <string notr="true">QPushButton {
@@ -210,7 +290,7 @@ QPushButton:hover {
 }</string>
       </property>
       <property name="text">
-       <string>Восстановить пароль</string>
+       <string>Recover your password</string>
       </property>
      </widget>
      <widget class="QPushButton" name="cancelButton">
@@ -222,8 +302,14 @@ QPushButton:hover {
         <height>24</height>
        </rect>
       </property>
+      <property name="maximumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
       <property name="text">
-       <string>Отмена</string>
+       <string>Cancel</string>
       </property>
      </widget>
      <widget class="SpinnerButton" name="loginButton">
@@ -235,8 +321,20 @@ QPushButton:hover {
         <height>24</height>
        </rect>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
       <property name="text">
-       <string>Войти</string>
+       <string>Log in</string>
       </property>
      </widget>
     </widget>
@@ -266,7 +364,7 @@ QPushButton:hover {
 }</string>
       </property>
       <property name="text">
-       <string>ВОССТАНОВЛЕНИЕ ПАРОЛЯ</string>
+       <string>PASSWORD RECOVERY</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -284,13 +382,25 @@ QPushButton:hover {
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <item>
         <widget class="QLabel" name="label_7">
+         <property name="minimumSize">
+          <size>
+           <width>99</width>
+           <height>39</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>99</width>
+           <height>39</height>
+          </size>
+         </property>
          <property name="styleSheet">
           <string notr="true">QLabel {
 	font: 10pt &quot;Sitka&quot;;
 }</string>
          </property>
          <property name="text">
-          <string>ПОЧТА/EMAIL</string>
+          <string>MAIL</string>
          </property>
         </widget>
        </item>
@@ -301,6 +411,18 @@ QPushButton:hover {
          </property>
          <item>
           <widget class="QLineEdit" name="emailEditForgetPassword">
+           <property name="minimumSize">
+            <size>
+             <width>246</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>246</width>
+             <height>20</height>
+            </size>
+           </property>
            <property name="styleSheet">
             <string notr="true">QLineEdit { font: 10pt &quot;Sitka&quot;;}</string>
            </property>
@@ -310,13 +432,13 @@ QPushButton:hover {
           <widget class="QLabel" name="emailNotFound">
            <property name="minimumSize">
             <size>
-             <width>0</width>
-             <height>2</height>
+             <width>246</width>
+             <height>10</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>16777215</width>
+             <width>246</width>
              <height>10</height>
             </size>
            </property>
@@ -328,7 +450,10 @@ QPushButton:hover {
 }</string>
            </property>
            <property name="text">
-            <string>                                          *Аккаунта с такой почтой не существует</string>
+            <string>*There is no account with such an email address.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
            </property>
           </widget>
          </item>
@@ -345,8 +470,20 @@ QPushButton:hover {
         <height>24</height>
        </rect>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
       <property name="text">
-       <string>Назад</string>
+       <string>Back</string>
       </property>
      </widget>
      <widget class="SpinnerButton" name="continueForgetPasswordButton">
@@ -354,12 +491,24 @@ QPushButton:hover {
        <rect>
         <x>220</x>
         <y>90</y>
-        <width>81</width>
+        <width>80</width>
         <height>24</height>
        </rect>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>80</width>
+        <height>24</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>80</width>
+        <height>24</height>
+       </size>
+      </property>
       <property name="text">
-       <string>Продолжить</string>
+       <string>Continue</string>
       </property>
      </widget>
     </widget>
@@ -393,7 +542,7 @@ QPushButton:hover {
 }</string>
       </property>
       <property name="text">
-       <string>Ошибка подключения к серверу: &quot;Socket operation timed out&quot;</string>
+       <string>Server connection error: &quot;Socket operation timed out&quot;</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -411,8 +560,20 @@ QPushButton:hover {
         <height>24</height>
        </rect>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
       <property name="text">
-       <string>Назад</string>
+       <string>Back</string>
       </property>
      </widget>
      <widget class="QPushButton" name="cancelButtonLabelWidget">
@@ -424,8 +585,20 @@ QPushButton:hover {
         <height>24</height>
        </rect>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
       <property name="text">
-       <string>Отмена</string>
+       <string>Cancel</string>
       </property>
      </widget>
      <widget class="QPushButton" name="closeButtonLabelWidget">
@@ -437,8 +610,20 @@ QPushButton:hover {
         <height>24</height>
        </rect>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
       <property name="text">
-       <string>Закрыть</string>
+       <string>Close</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_9">
@@ -456,7 +641,7 @@ QPushButton:hover {
 }</string>
       </property>
       <property name="text">
-       <string>АВТОРИЗАЦИЯ</string>
+       <string>AUTHORIZATION</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -489,7 +674,7 @@ QPushButton:hover {
 }</string>
       </property>
       <property name="text">
-       <string>ВОССТАНОВЛЕНИЕ ПАРОЛЯ</string>
+       <string>PASSWORD RECOVERY</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -541,8 +726,20 @@ QPushButton:hover {
         <height>24</height>
        </rect>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>75</width>
+        <height>24</height>
+       </size>
+      </property>
       <property name="text">
-       <string>Назад</string>
+       <string>Back</string>
       </property>
      </widget>
      <widget class="SpinnerButton" name="continueButtonEnterCode">
@@ -555,7 +752,7 @@ QPushButton:hover {
        </rect>
       </property>
       <property name="text">
-       <string>Продолжить</string>
+       <string>Continue</string>
       </property>
      </widget>
     </widget>
@@ -585,7 +782,7 @@ QPushButton:hover {
 }</string>
       </property>
       <property name="text">
-       <string>ВОССТАНОВЛЕНИЕ ПАРОЛЯ</string>
+       <string>PASSWORD RECOVERY</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -606,7 +803,7 @@ QPushButton:hover {
 }</string>
       </property>
       <property name="text">
-       <string>Требования к паролю:</string>
+       <string>Password Requirements:</string>
       </property>
      </widget>
      <widget class="QWidget" name="verticalLayoutWidget_5">
@@ -625,7 +822,7 @@ QPushButton:hover {
           <string notr="true"/>
          </property>
          <property name="text">
-          <string>* Минимальная длина — 8 символов</string>
+          <string>* The minimum length is 8 characters</string>
          </property>
         </widget>
        </item>
@@ -635,7 +832,7 @@ QPushButton:hover {
           <string notr="true"/>
          </property>
          <property name="text">
-          <string>* Должен содержать хотя бы одну заглавную букву (A-Z)</string>
+          <string>* Must contain at least one capital letter (A-Z)</string>
          </property>
         </widget>
        </item>
@@ -645,7 +842,7 @@ QPushButton:hover {
           <string notr="true"/>
          </property>
          <property name="text">
-          <string>* Должен содержать хотя бы одну строчную букву (a-z)</string>
+          <string>* Must contain at least one lowercase letter (a-z)</string>
          </property>
         </widget>
        </item>
@@ -655,7 +852,7 @@ QPushButton:hover {
           <string notr="true"/>
          </property>
          <property name="text">
-          <string>* Должен содержать хотя бы одну цифру (0-9)</string>
+          <string>* Must contain at least one digit (0-9)</string>
          </property>
         </widget>
        </item>
@@ -665,7 +862,7 @@ QPushButton:hover {
           <string notr="true"/>
          </property>
          <property name="text">
-          <string>* Должен содержать хотя бы один специальный символ (например, !@#$%^*)</string>
+          <string>* Must contain at least one special character (for example, !@#$%^*)</string>
          </property>
         </widget>
        </item>
@@ -675,7 +872,7 @@ QPushButton:hover {
           <string notr="true"/>
          </property>
          <property name="text">
-          <string>* Не должен содержать пробелы или кириллицу</string>
+          <string>* It must not contain spaces or Cyrillic characters</string>
          </property>
         </widget>
        </item>
@@ -698,18 +895,42 @@ QPushButton:hover {
          </property>
          <item>
           <widget class="QLabel" name="label_14">
+           <property name="minimumSize">
+            <size>
+             <width>115</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>115</width>
+             <height>35</height>
+            </size>
+           </property>
            <property name="styleSheet">
             <string notr="true">QLabel {
 	font: 10pt &quot;Sitka&quot;;
 }</string>
            </property>
            <property name="text">
-            <string>НОВЫЙ ПАРОЛЬ</string>
+            <string>NEW PASSWORD</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QLineEdit" name="resetNewPasswordEdit">
+           <property name="minimumSize">
+            <size>
+             <width>289</width>
+             <height>22</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>289</width>
+             <height>22</height>
+            </size>
+           </property>
            <property name="styleSheet">
             <string notr="true"/>
            </property>
@@ -724,8 +945,20 @@ QPushButton:hover {
          </property>
          <item>
           <widget class="QLabel" name="label_15">
+           <property name="minimumSize">
+            <size>
+             <width>134</width>
+             <height>34</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>134</width>
+             <height>35</height>
+            </size>
+           </property>
            <property name="text">
-            <string>ПОДТВЕРДИТЕ ПАРОЛЬ</string>
+            <string>CONFIRM PASSWORD</string>
            </property>
           </widget>
          </item>
@@ -735,19 +968,32 @@ QPushButton:hover {
             <number>0</number>
            </property>
            <item>
-            <widget class="QLineEdit" name="confirmResetNewPasswordEdit"/>
+            <widget class="QLineEdit" name="confirmResetNewPasswordEdit">
+             <property name="minimumSize">
+              <size>
+               <width>287</width>
+               <height>22</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>287</width>
+               <height>22</height>
+              </size>
+             </property>
+            </widget>
            </item>
            <item>
             <widget class="QLabel" name="errorPassword">
              <property name="minimumSize">
               <size>
-               <width>0</width>
-               <height>2</height>
+               <width>287</width>
+               <height>10</height>
               </size>
              </property>
              <property name="maximumSize">
               <size>
-               <width>16777215</width>
+               <width>287</width>
                <height>10</height>
               </size>
              </property>
@@ -759,7 +1005,10 @@ QPushButton:hover {
 }</string>
              </property>
              <property name="text">
-              <string>                                                                                                *Пароли не совпадают</string>
+              <string>*Passwords don't match</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
             </widget>
            </item>
@@ -779,7 +1028,7 @@ QPushButton:hover {
        </rect>
       </property>
       <property name="text">
-       <string>Отмена</string>
+       <string>Cancel</string>
       </property>
      </widget>
      <widget class="SpinnerButton" name="confirmResetNewPasswordButton">
@@ -792,7 +1041,7 @@ QPushButton:hover {
        </rect>
       </property>
       <property name="text">
-       <string>Сменить пароль</string>
+       <string>Change password</string>
       </property>
      </widget>
     </widget>

@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 project(deadlinelist VERSION 0.1 LANGUAGES CXX)
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -16,8 +18,8 @@ if(WIN32)
     set(APP_ICON_RESOURCE_WINDOWS "resource/app_icon.rc")
 endif()
 
-find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Gui Widgets Multimedia Network)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets Multimedia Network)
+find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Gui Widgets Multimedia Network LinguistTools)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets Multimedia Network LinguistTools)
 if(WIN32)
     set(OPENSSL_ROOT_DIR "C:\\Program Files\\OpenSSL-Win64")
     set(OPENSSL_USE_STATIC_LIBS TRUE)
@@ -25,6 +27,8 @@ endif()
 find_package(OpenSSL REQUIRED)
 
 qt_add_resources(QRCS resource/resource.qrc)
+qt_standard_project_setup(I18N_TRANSLATED_LANGUAGES en ru)
+
 
 set(PROJECT_SOURCES
         src/main.cpp
@@ -96,7 +100,17 @@ else()
 endif()
 
 target_link_libraries(deadlinelist PRIVATE OpenSSL::SSL OpenSSL::Crypto OpenSSL::applink Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia Qt${QT_VERSION_MAJOR}::Network)
-
+qt6_add_translations(deadlinelist
+    QM_FILES_OUTPUT_VARIABLE qm_files
+)
+install(FILES ${qm_files} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/translations)
+add_custom_command(
+    TARGET deadlinelist POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/translations
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${qm_files}
+        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/translations
+)
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
@@ -117,7 +131,7 @@ install(TARGETS deadlinelist
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-
+install(FILES ${QM_FILES} DESTINATION ${CMAKE_INSTALL_BINDIR}/translations)
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(deadlinelist)
 endif()

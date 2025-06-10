@@ -49,6 +49,7 @@ bool overwritingFile(const QString &fileName, const Config* config)
     out << config->enableSoundNotifications;
     out << config->launchByDefault;
     out << config->launchingTray;
+    out << config->language;
 
     file.close();
     return true;
@@ -72,6 +73,7 @@ bool loadFromFile(const QString &fileName, Config* config)
     in >> config->enableSoundNotifications;
     in >> config->launchByDefault;
     in >> config->launchingTray;
+    in >> config->language;
 
     file.close();
     return true;

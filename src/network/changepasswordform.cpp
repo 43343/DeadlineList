@@ -1,6 +1,7 @@
 #include "changepasswordform.h"
 #include "ui_changepasswordform.h"
 #include <QRegularExpression>
+#include <QTranslator>
 
 ChangePasswordForm::ChangePasswordForm(SocketClient* socket, QWidget *parent)
     : QDialog(parent)
@@ -73,12 +74,12 @@ void ChangePasswordForm::successfullyChangePassword()
     ui->newPasswordEdit->setEnabled(true);
     ui->confirmPasswordEdit->setEnabled(true);
     ui->changePasswordButton->setEnabled(true);
-    ui->changePasswordButton->setText("Сменить пароль");
+    ui->changePasswordButton->setText(tr("Change password"));
     ui->changePasswordButton->stopSpinner();
     ui->closeButtonLabelWidget->show();
     ui->cancelButtonLabelWidget->hide();
     ui->backButtonLabelWidget->hide();
-    ui->labelWidgetText->setText("Пароль изменен успешно.");
+    ui->labelWidgetText->setText(tr("The password was changed successfully."));
     ui->stackedWidget->setCurrentIndex(1);
     setMinimumSize(480,130);
     setMaximumSize(480,130);
@@ -109,7 +110,7 @@ void ChangePasswordForm::errorChangePassword(const QString& error)
     ui->confirmPasswordEdit->setEnabled(true);
     ui->cancelButton->setEnabled(true);
     ui->changePasswordButton->setEnabled(true);
-    ui->changePasswordButton->setText("Сменить пароль");
+    ui->changePasswordButton->setText(tr("Change password"));
     ui->changePasswordButton->stopSpinner();
 }
 void ChangePasswordForm::back()

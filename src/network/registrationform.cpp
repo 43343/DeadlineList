@@ -1,6 +1,7 @@
 #include "registrationform.h"
 #include "ui_registrationform.h"
 #include <QRegularExpression>
+#include <QTranslator>
 
 RegistrationForm::RegistrationForm(SocketClient* socket, QWidget *parent)
     : QDialog(parent)
@@ -67,7 +68,7 @@ void RegistrationForm::sendCodeRegistrationButtonClick()
     if(!isValidEmail)
     {
         ui->emailEdit->setStyleSheet("QLineEdit { font: 10pt \"Sitka\"; border: 1px solid red;}");
-        ui->errorEmail->setText("                                                                            *Почта введена некорректно");
+        ui->errorEmail->setText(tr("*The email was entered incorrectly"));
         ui->errorEmail->show();
     }
     if(!isValidConfirmPassword)
@@ -106,13 +107,13 @@ void RegistrationForm::successfullySendCodeRegistration()
     ui->passwordEdit->setEnabled(true);
     ui->confirmPasswordEdit->setEnabled(true);
     ui->registerButton->setEnabled(true);
-    ui->registerButton->setText("Зарегистрироваться");
+    ui->registerButton->setText(tr("Register"));
     ui->registerButton->stopSpinner();
     ui->closeButtonLabelWidget->show();
     ui->cancelButtonLabelWidget->hide();
     ui->backButtonLabelWidget->hide();
     ui->stackedWidget->setCurrentIndex(1);
-    ui->confirmationEmailLabel->setText("На почту " + ui->emailEdit->text() +  " был выслан код, введите его в поле ниже:");
+    ui->confirmationEmailLabel->setText(tr("To the mail ") + ui->emailEdit->text() +  tr(" a code has been sent, enter it in the field below:"));
     setMinimumSize(392,186);
     setMaximumSize(392,186);
     ui->registrationLabel->setMinimumWidth(392);
@@ -123,7 +124,7 @@ void RegistrationForm::errorSendCodeRegistration(const QString& error)
     if(error == "The user with this email already exists.")
     {
         ui->emailEdit->setStyleSheet("QLineEdit { font: 10pt \"Sitka\"; border: 1px solid red;}");
-        ui->errorEmail->setText("                                               *Пользователь с такой почтой уже существует");
+        ui->errorEmail->setText(tr("*A user with such an email already exists"));
         ui->errorEmail->show();
     }
     else
@@ -143,7 +144,7 @@ void RegistrationForm::errorSendCodeRegistration(const QString& error)
     ui->confirmPasswordEdit->setEnabled(true);
     ui->cancelButton->setEnabled(true);
     ui->registerButton->setEnabled(true);
-    ui->registerButton->setText("Зарегистрироваться");
+    ui->registerButton->setText(tr("Register"));
     ui->registerButton->stopSpinner();
 }
 void RegistrationForm::successfullyCheckCodeRegistration()
@@ -153,9 +154,9 @@ void RegistrationForm::successfullyCheckCodeRegistration()
     ui->confirmationButtonEnterCode->setEnabled(true);
     ui->backButtonEnterCode->setEnabled(true);
     ui->confirmationButtonEnterCode->stopSpinner();
-    ui->confirmationButtonEnterCode->setText("Подтвердить");
+    ui->confirmationButtonEnterCode->setText(tr("Confirm"));
     ui->stackedWidget->setCurrentIndex(2);
-    ui->labelWidgetText->setText("Регистрация прошла успешно.");
+    ui->labelWidgetText->setText(tr("Registration was successful."));
     setMinimumSize(480,130);
     setMaximumSize(480,130);
     ui->registrationLabel->setMinimumWidth(480);
@@ -181,7 +182,7 @@ void RegistrationForm::errorCheckCodeRegistration(const QString& error)
     ui->confirmationButtonEnterCode->setEnabled(true);
     ui->backButtonEnterCode->setEnabled(true);
     ui->confirmationButtonEnterCode->stopSpinner();
-    ui->confirmationButtonEnterCode->setText("Подтвердить");
+    ui->confirmationButtonEnterCode->setText(tr("Confirm"));
 }
 void RegistrationForm::back()
 {

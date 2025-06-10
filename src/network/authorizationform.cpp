@@ -1,5 +1,6 @@
 #include "authorizationform.h"
 #include "ui_authorizationform.h"
+#include <QTranslator>
 
 AuthorizationForm::AuthorizationForm(SocketClient* socket, QWidget *parent)
     : QDialog(parent)
@@ -59,7 +60,7 @@ void AuthorizationForm::successfullyAuthorization()
     ui->emailEdit->setEnabled(true);
     ui->passwordEdit->setEnabled(true);
     ui->loginButton->setEnabled(true);
-    ui->loginButton->setText("Войти");
+    ui->loginButton->setText(tr("Log in"));
     ui->loginButton->stopSpinner();
     ui->closeButtonLabelWidget->show();
     ui->cancelButtonLabelWidget->hide();
@@ -67,7 +68,7 @@ void AuthorizationForm::successfullyAuthorization()
     ui->stackedWidget->setCurrentIndex(2);
     setMinimumSize(480,130);
     setMaximumSize(480,130);
-    ui->labelWidgetText->setText("Авторизация прошла успешно.");
+    ui->labelWidgetText->setText(tr("Authorization was successful."));
 }
 void AuthorizationForm::errorAuthorization(const QString& error)
 {
@@ -90,7 +91,7 @@ void AuthorizationForm::errorAuthorization(const QString& error)
     ui->passwordEdit->setEnabled(true);
     ui->forgetPasswordButton->setEnabled(true);
     ui->loginButton->setEnabled(true);
-    ui->loginButton->setText("Войти");
+    ui->loginButton->setText(tr("Log in"));
     ui->loginButton->stopSpinner();
 }
 void AuthorizationForm::back()
@@ -127,9 +128,9 @@ void AuthorizationForm::successfullySendCodeEmail()
     ui->emailEditForgetPassword->setEnabled(true);
     ui->continueForgetPasswordButton->setEnabled(true);
     ui->backForgetPasswordButton->setEnabled(true);
-    ui->continueForgetPasswordButton->setText("Продолжить");
+    ui->continueForgetPasswordButton->setText(tr("Continue"));
     ui->continueForgetPasswordButton->stopSpinner();
-    ui->resetPasswordEmailLabel->setText("На почту " + ui->emailEditForgetPassword->text() +  " был выслан код, введите его в поле ниже:");
+    ui->resetPasswordEmailLabel->setText(tr("To the mail ") + ui->emailEditForgetPassword->text() +  tr(" a code has been sent, enter it in the field below:"));
     ui->stackedWidget->setCurrentIndex(3);
     setMinimumSize(392,186);
     setMaximumSize(392,186);
@@ -154,7 +155,7 @@ void AuthorizationForm::errorSendCodeEmail(const QString& error)
     ui->emailEditForgetPassword->setEnabled(true);
     ui->continueForgetPasswordButton->setEnabled(true);
     ui->backForgetPasswordButton->setEnabled(true);
-    ui->continueForgetPasswordButton->setText("Продолжить");
+    ui->continueForgetPasswordButton->setText(tr("Continue"));
     ui->continueForgetPasswordButton->stopSpinner();
 }
 void AuthorizationForm::continueEnterCode()
@@ -178,7 +179,7 @@ void AuthorizationForm::successfullyContinueEnterCode()
     ui->continueButtonEnterCode->setEnabled(true);
     ui->backButtonEnterCode->setEnabled(true);
     ui->continueButtonEnterCode->stopSpinner();
-    ui->continueButtonEnterCode->setText("Продолжить");
+    ui->continueButtonEnterCode->setText(tr("Continue"));
     ui->stackedWidget->setCurrentIndex(4);
     setMinimumSize(600,329);
     setMaximumSize(600,329);
@@ -203,7 +204,7 @@ void AuthorizationForm::errorContinueEnterCode(const QString& error)
     ui->continueButtonEnterCode->setEnabled(true);
     ui->backButtonEnterCode->setEnabled(true);
     ui->continueButtonEnterCode->stopSpinner();
-    ui->continueButtonEnterCode->setText("Продолжить");
+    ui->continueButtonEnterCode->setText(tr("Continue"));
 }
 void AuthorizationForm::confirmNewPassword()
 {
@@ -228,14 +229,14 @@ void AuthorizationForm::successfullyConfirmNewPassword()
     ui->confirmResetNewPasswordButton->setEnabled(true);
     ui->backResetNewPasswordButton->setEnabled(true);
     ui->confirmResetNewPasswordButton->stopSpinner();
-    ui->confirmResetNewPasswordButton->setText("Подтвердить");
+    ui->confirmResetNewPasswordButton->setText(tr("Confirm"));
     ui->closeButtonLabelWidget->show();
     ui->cancelButtonLabelWidget->hide();
     ui->backButtonLabelWidget->hide();
     ui->stackedWidget->setCurrentIndex(2);
     setMinimumSize(480,130);
     setMaximumSize(480,130);
-    ui->labelWidgetText->setText("Пароль изменен успешно.");
+    ui->labelWidgetText->setText(tr("The password was changed successfully."));
 }
 void AuthorizationForm::errorConfirmNewPassword(const QString& error)
 {
@@ -250,7 +251,7 @@ void AuthorizationForm::errorConfirmNewPassword(const QString& error)
     ui->confirmResetNewPasswordButton->setEnabled(true);
     ui->backResetNewPasswordButton->setEnabled(true);
     ui->confirmResetNewPasswordButton->stopSpinner();
-    ui->confirmResetNewPasswordButton->setText("Подтвердить");
+    ui->confirmResetNewPasswordButton->setText(tr("Confirm"));
 }
 void AuthorizationForm::validatePassword()
 {

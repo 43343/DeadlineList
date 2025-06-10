@@ -7,6 +7,8 @@
 #include <QFile>
 #include <QTextStream>
 #include <QStandardPaths>
+#include <QTranslator>
+#include <QUrl>
 
 Settings::Settings(Config *config,QWidget *parent)
     : QDialog(parent)
@@ -22,6 +24,9 @@ Settings::Settings(Config *config,QWidget *parent)
 
     ui->launchingTrayCheckBox->setEnabled(ui->launchByDefaultCheckbox->isChecked());
     ui->launchingTrayLabel->setEnabled(ui->launchByDefaultCheckbox->isChecked());
+    ui->languagesComboBox->addItem(tr("English"), "en");
+    ui->languagesComboBox->addItem(tr("Russian"), "ru");
+    ui->languagesComboBox->setCurrentIndex(ui->languagesComboBox->findData(config->language));
 
     connect(ui->launchByDefaultCheckbox, &QCheckBox::clicked, this, &Settings::onLaunchByDefaultCheckBox);
 
@@ -38,10 +43,34 @@ void Settings::onLaunchByDefaultCheckBox()
 
 void Settings::save()
 {
+    QTranslator *translator = new QTranslator();
+    QString langCode = ui->languagesComboBox->currentData().toString();
+    QString translationFile = "translations/deadlinelist_" + langCode + ".qm";
+
+    if (!translator->load(translationFile)) {
+        qWarning() << "Failed to load translation file:" << translationFile;
+
+        if (!QFile::exists(translationFile)) {
+            qDebug() << "File does not exist in resources";
+        } else {
+            qDebug() << "File exists but could not be loaded";
+            QFile file(translationFile);
+            if (file.open(QIODevice::ReadOnly)) {
+                qDebug() << "File size:" << file.size() << "bytes";
+                file.close();
+            }
+        }
+
+        delete translator;
+        return;
+    }
+
+    qApp->installTranslator(translator);
     m_config->enableTextNotifications = ui->enableTextNotificationsCheckBox->isChecked();
     m_config->enableSoundNotifications = ui->enableSoundNotificationsCheckBox->isChecked();
     m_config->launchByDefault = ui->launchByDefaultCheckbox->isChecked();
     m_config->launchingTray = ui->launchingTrayCheckBox->isChecked();
+    m_config->language = langCode;
     overwritingFile("config", m_config);
 #ifdef Q_OS_WIN
     QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
