@@ -8,7 +8,6 @@
 #include <QTextStream>
 #include <QStandardPaths>
 #include <QTranslator>
-#include <QUrl>
 
 Settings::Settings(Config *config,QWidget *parent)
     : QDialog(parent)
