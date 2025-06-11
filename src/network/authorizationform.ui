@@ -47,7 +47,7 @@
     </size>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="page">
     <widget class="QWidget" name="widget" native="true">
@@ -1052,12 +1052,12 @@ QPushButton:hover {
   <customwidget>
    <class>SpinnerButton</class>
    <extends>QPushButton</extends>
-   <header>../button/spinnerbutton.h</header>
+   <header>src/button/spinnerbutton.h</header>
   </customwidget>
   <customwidget>
    <class>OTPInputWidget</class>
    <extends>QWidget</extends>
-   <header>otpinputwidget.h</header>
+   <header>src/network/otpinputwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

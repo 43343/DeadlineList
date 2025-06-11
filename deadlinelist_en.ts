@@ -185,10 +185,6 @@
         <translation>Recover your password</translation>
     </message>
     <message>
-        <source>PASSWORD</source>
-        <translation>PASSWORD</translation>
-    </message>
-    <message>
         <source>Back</source>
         <translation>Back</translation>
     </message>

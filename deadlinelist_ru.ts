@@ -185,10 +185,6 @@
         <translation>Восстановить пароль</translation>
     </message>
     <message>
-        <source>PASSWORD</source>
-        <translation>ПАРОЛЬ</translation>
-    </message>
-    <message>
         <source>Back</source>
         <translation>Назад</translation>
     </message>

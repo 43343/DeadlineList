@@ -201,7 +201,7 @@
     </property>
     <property name="icon">
      <iconset resource="../resource/resource.qrc">
-      <normaloff>:/icons/icons/icons8-пользователь-24.png</normaloff>:/icons/icons/icons8-пользователь-24.png</iconset>
+      <normaloff>:/icons/icons/icons8-user-24.png</normaloff>:/icons/icons/icons8-user-24.png</iconset>
     </property>
    </widget>
    <widget class="ShadowButton" name="warningButton">
@@ -243,7 +243,7 @@
   <customwidget>
    <class>ShadowButton</class>
    <extends>QPushButton</extends>
-   <header>button/shadowbutton.h</header>
+   <header>src/button/shadowbutton.h</header>
   </customwidget>
  </customwidgets>
  <resources>
